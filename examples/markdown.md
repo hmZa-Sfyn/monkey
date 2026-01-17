@@ -1,4 +1,4 @@
-# File `doc.mp`
+# File `doc.mk`
 Table of Contents
 =================
 

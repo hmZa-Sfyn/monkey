@@ -1,7 +1,7 @@
 {
     "name": "mp",
     "displayName": "magpie",
-    "description": "Magpie language",
+    "description": "monkey language",
     "version": "0.0.1",
     "publisher": "magpie",
     "engines": {
@@ -14,12 +14,12 @@
         "languages": [{
             "id": "magpie",
             "aliases": ["magpie", "magpie"],
-            "extensions": [".mp"],
+            "extensions": [".mk"],
             "configuration": "./language-configuration.json"
         }],
         "grammars": [{
             "language": "magpie",
-            "scopeName": "source.mp",
+            "scopeName": "source.mk",
             "path": "./syntaxes/magpie.tmLanguage"
         }]
     }

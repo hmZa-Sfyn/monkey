@@ -6,9 +6,9 @@ import (
 	"strings"
 	"syscall/js"
 
-	"magpie/eval"
-	"magpie/lexer"
-	"magpie/parser"
+	"monkey/eval"
+	"monkey/lexer"
+	"monkey/parser"
 )
 
 func runCode(this js.Value, i []js.Value) interface{} {
@@ -31,7 +31,7 @@ func runCode(this js.Value, i []js.Value) interface{} {
 
 	scope := eval.NewScope(nil, &buf)
 	result := eval.Eval(program, scope)
-	if (string(result.Type()) == eval.ERROR_OBJ) {
+	if string(result.Type()) == eval.ERROR_OBJ {
 		m["output"] = buf.String() + result.Inspect()
 	} else {
 		m["output"] = buf.String()
