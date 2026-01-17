@@ -403,7 +403,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	program.Statements = []ast.Statement{}
 	program.Imports = make(map[string]*ast.ImportStatement)
 
-	//if the monkey file only have ';', then we should return earlier.
+	//if the magpie file only have ';', then we should return earlier.
 	if p.curTokenIs(token.SEMICOLON) && p.peekTokenIs(token.EOF) {
 		return program
 	}
@@ -1220,29 +1220,6 @@ func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 
 var importPathConfig map[string]string
 
-func parseSimpleYaml(data string) map[string]string {
-	cfg := make(map[string]string)
-	lines := strings.Split(data, "\n")
-
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-
-		parts := strings.SplitN(line, ":", 2)
-		if len(parts) != 2 {
-			continue
-		}
-
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-		cfg[key] = value
-	}
-
-	return cfg
-}
-
 func loadImportPathConfig() (map[string]string, error) {
 	if importPathConfig != nil {
 		return importPathConfig, nil
@@ -1253,18 +1230,29 @@ func loadImportPathConfig() (map[string]string, error) {
 		return nil, err
 	}
 
-	configFile := filepath.Join(home, ".mk", "cfg", "PATH.yaml")
-	data, err := ioutil.ReadFile(configFile)
+	cfgPath := filepath.Join(home, ".mk", "cfg", "PATH.yaml")
+	data, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
-		return map[string]string{}, nil
+		return nil, fmt.Errorf("missing import config: %s", cfgPath)
 	}
 
-	cfg := parseSimpleYaml(string(data))
-
-	for k, v := range cfg {
-		if strings.HasPrefix(v, "~/") {
-			cfg[k] = filepath.Join(home, strings.TrimPrefix(v, "~/"))
+	cfg := map[string]string{}
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
 		}
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		if strings.HasPrefix(value, "~/") {
+			value = filepath.Join(home, strings.TrimPrefix(value, "~/"))
+		}
+		cfg[key] = value
 	}
 
 	importPathConfig = cfg
@@ -1273,56 +1261,50 @@ func loadImportPathConfig() (map[string]string, error) {
 
 func (p *Parser) parseImportStatement() *ast.ImportStatement {
 	stmt := &ast.ImportStatement{Token: p.curToken}
-
 	p.nextToken()
 
-	paths := []string{}
-	paths = append(paths, p.curToken.Literal)
+	importPath := p.curToken.Literal
 
 	for p.peekTokenIs(token.DOT) {
 		p.nextToken()
 		p.nextToken()
-		paths = append(paths, p.curToken.Literal)
+		importPath += "." + p.curToken.Literal
 	}
 
-	importPathDots := strings.Join(paths, ".")
-	path := strings.TrimSpace(strings.Join(paths, "/"))
-	stmt.ImportPath = filepath.Base(path)
+	stmt.ImportPath = filepath.Base(strings.TrimPrefix(importPath, "@"))
 
-	program, funcs, err := p.getImportedStatements(importPathDots)
+	prog, funcs, err := p.getImportedStatements(importPath)
 	if err != nil {
 		p.errors = append(p.errors, err.Error())
 		p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 		return stmt
 	}
+
+	stmt.Program = prog
 	stmt.Functions = funcs
-	stmt.Program = program
 	return stmt
 }
 
 func (p *Parser) getImportedStatements(importpath string) (*ast.Program, map[string]*ast.FunctionLiteral, error) {
-	// NEW: handle local import syntax: !.packer -> ./packer.mk
-	if strings.HasPrefix(importpath, "!.") {
-		// Remove "!" and keep ".packer"
-		local := strings.TrimPrefix(importpath, "!")
-		// Convert dot to slash
-		localPath := strings.TrimPrefix(strings.ReplaceAll(local, ".", "/"), "/")
-		return p.parseFile(localPath+".mk", importpath)
-	}
-
 	cfg, err := loadImportPathConfig()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	parts := strings.Split(importpath, ".")
-	root := parts[0]
-	subpath := ""
-	if len(parts) > 1 {
-		subpath = filepath.Join(parts[1:]...)
-	}
+	if strings.HasPrefix(importpath, "@") {
+		importpath = strings.TrimPrefix(importpath, "@")
+		parts := strings.Split(importpath, ".")
+		root := parts[0]
+		subpath := ""
+		if len(parts) > 1 {
+			subpath = filepath.Join(parts[1:]...)
+		}
 
-	if base, ok := cfg[root]; ok {
+		base, ok := cfg[root]
+		if !ok {
+			return nil, nil, fmt.Errorf("Syntax Error:%v- unknown import root: %s", p.curToken.Pos, root)
+		}
+
 		fn := filepath.Join(base, subpath+".mk")
 		return p.parseFile(fn, importpath)
 	}
@@ -1344,35 +1326,25 @@ func (p *Parser) parseFile(fn, importpath string) (*ast.Program, map[string]*ast
 		ps = NewWithDoc(l, filepath.Dir(fn))
 	}
 
-	parsed := ps.ParseProgram()
+	program := ps.ParseProgram()
 	if len(ps.errors) != 0 {
 		p.errors = append(p.errors, ps.errors...)
 		p.errorLines = append(p.errorLines, ps.errorLines...)
 	}
-	return parsed, ps.Functions, nil
+
+	return program, ps.Functions, nil
 }
 
 func (p *Parser) parseFileFromDefault(importpath string) (*ast.Program, map[string]*ast.FunctionLiteral, error) {
 	path := p.path
-
 	if path == "" {
 		path = "."
 	}
 
 	fn := filepath.Join(path, importpath+".mk")
 	f, err := ioutil.ReadFile(fn)
-	if err != nil { //error occurred, maybe the file do not exists.
-		importRoot := os.Getenv("MAGPIE_ROOT")
-		if len(importRoot) == 0 {
-			return nil, nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.mk, %s", p.curToken.Pos, importpath, path)
-		} else {
-			fn = filepath.Join(importRoot, importpath+".mk")
-			e, err := ioutil.ReadFile(fn)
-			if err != nil {
-				return nil, nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.mk, %s", p.curToken.Pos, importpath, importRoot)
-			}
-			f = e
-		}
+	if err != nil {
+		return nil, nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.mk, %s", p.curToken.Pos, importpath, fn)
 	}
 
 	l := lexer.New(fn, string(f))
@@ -1382,12 +1354,14 @@ func (p *Parser) parseFileFromDefault(importpath string) (*ast.Program, map[stri
 	} else {
 		ps = NewWithDoc(l, path)
 	}
-	parsed := ps.ParseProgram()
+
+	program := ps.ParseProgram()
 	if len(ps.errors) != 0 {
 		p.errors = append(p.errors, ps.errors...)
 		p.errorLines = append(p.errorLines, ps.errorLines...)
 	}
-	return parsed, ps.Functions, nil
+
+	return program, ps.Functions, nil
 }
 
 func (p *Parser) parseDoLoopExpression() ast.Expression {

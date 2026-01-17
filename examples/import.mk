@@ -16,7 +16,7 @@
 
 
 //import "examples/sub_package/calc"
-import lib.examples.sub_package.calc // => ~/.mk/monkey/lib/examples/sub_package/calc.mk
+import "sub_package/calc"
 
 a, b = 10, 2
 printf("10 + 2 = %d\n", calc.Add(a, b))
@@ -42,6 +42,6 @@ printf("e = %d, f = %d\n", e, f)
 //will report error: 'unexported name'
 //printf("10 + 2 = %d\n", calc._add(a, b))
 
-import std.io // => ~/.mk/monkey/lib/std/io.mk
-import !.httpclient // => ./httpclient.mk
+//import std.io // => ~/.mk/monkey/lib/std/io.mk
+//import !.httpclient // => ./httpclient.mk
 
