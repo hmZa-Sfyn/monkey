@@ -76,17 +76,20 @@ func Start(out io.Writer, color bool) {
 	if color && !l.IsInwinConsole() {
 		eval.REPLColor = true
 	}
+
+	// Important: persistent scope for REPL
 	scope := eval.NewScope(nil, os.Stdout)
+
 	wd, err := os.Getwd()
 	if err != nil {
 		io.WriteString(out, err.Error())
 		os.Exit(1)
 	}
 
-	// var tmplines []string
 	var lex *lexer.Lexer
 	var p *parser.Parser
 	var program *ast.Program
+
 	for {
 		if line, err := l.Prompt(PROMPT); err == nil {
 			if line == "exit" || line == "quit" {
