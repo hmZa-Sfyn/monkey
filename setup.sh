@@ -18,13 +18,18 @@ esac
 if [[ "$PLATFORM" == "windows" ]]; then
   USER_HOME="$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r')"
   BIN_DIR="$USER_HOME/.mk/bin"
+  LIB_DIR="$USER_HOME/.mk/lib"
   binary_name="monkey.exe"
 else
   USER_HOME="$HOME"
   BIN_DIR="$HOME/.mk/bin"
+  LIB_DIR="$HOME/.mk/lib"
 fi
 
 mkdir -p "$BIN_DIR"
+mkdir -p "$LIB_DIR"
+mkdir -p "$LIB_DIR/std"
+mkdir -p "$LIB_DIR/usr"
 
 # 1) Build binary
 echo "Building $interpreter_name..."
