@@ -50,11 +50,11 @@ var colors = map[liner.Category]liner.Color{
 	liner.IdentType:    liner.COLOR_WHITE,
 }
 
-const PROMPT = "magpie>> "
-const CONT_PROMPT = "... " // continue prompt
+const PROMPT = "monkey >> " // main prompt
+const CONT_PROMPT = "... "  // continue prompt
 
 func Start(out io.Writer, color bool) {
-	history := filepath.Join(os.TempDir(), ".magpie_history")
+	history := filepath.Join(os.TempDir(), ".monkey_history")
 	l := liner.NewLiner()
 	defer l.Close()
 

@@ -15,7 +15,7 @@
 //
 
 
-//#!/usr/bin/magpie
+//#!~/.mk/bin/magpie
 # Using 'let'(optional) to declare variable
 # functio as a first-class object
 let add  =  fn(x,y){

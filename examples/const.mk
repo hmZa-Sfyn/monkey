@@ -15,7 +15,7 @@
 //
 
 
-//#!/usr/bin/magpie
+//#!~/.mk/bin/magpie
 const a = 3.14159
 //a = 3.14 //error
 printf("PI=%f\n", a)

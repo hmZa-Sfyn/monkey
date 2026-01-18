@@ -102,13 +102,10 @@ func (d *Debugger) SetFunctions(functions map[string]*ast.FunctionLiteral) {
 }
 
 func (d *Debugger) ShowBanner() {
-	fmt.Println("                                    _     ")
-	fmt.Println("   ____ ___   ____ _ ____ _ ____   (_)___ ")
-	fmt.Println("  / __ `__ \\ / __ `// __ `// __ \\ / // _ \\")
-	fmt.Println(" / / / / / // /_/ // /_/ // /_/ // //  __/")
-	fmt.Println("/_/ /_/ /_/ \\__,_/ \\__, // .___//_/ \\___/ ")
-	fmt.Println("                  /____//_/             ")
-	fmt.Println("")
+	fmt.Println(" Monkey Debugger (monkey-dbg) ")
+	fmt.Println(" Type 'help' for help. \n")
+	fmt.Println(" github: https://github.com/hmZa-Sfyn/monkey")
+	fmt.Println(" author: hmza-sfyn")
 }
 
 func (d *Debugger) ProcessCommand() {
@@ -155,7 +152,7 @@ func (d *Debugger) ProcessCommand() {
 		}
 
 		fmt.Printf("\n%d\t\t%s", p.Line, d.SrcLines[p.Line])
-		fmt.Print("\n(magpie) ")
+		fmt.Print("\n(monkey) ")
 
 		fmt.Print("\x1b[1m\x1b[36m")
 

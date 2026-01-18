@@ -1,0 +1,27 @@
+# unbound integers:
+```js
+
+import @monkey.bridge.unboundint
+
+a = unboundint.int(99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999)
+
+a.value() // => 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+
+b = unboundint.int(9990000000000000000000000000000000000000000000000000000000000000)
+
+w = a + b
+x = a - b
+y = a * b
+z = a / b
+
+
+println(w)
+println(x)
+println(y) // => very long number...
+println(z)
+
+
+// i will try to use python3 maybe? or c maybe???
+
+```
+
