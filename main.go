@@ -407,10 +407,7 @@ func cmdPkgInit(args []string) error {
 	filesToCreate := []struct {
 		path    string
 		content string
-	}{
-		{"main.mk", "// Package: " + pkgName + "\nputs(\"Hello from " + pkgName + " package!\")\n"},
-		{"lib.mk", "// Your library code here\n"},
-	}
+	}{}
 
 	for _, f := range filesToCreate {
 		full := filepath.Join(absDir, f.path)
