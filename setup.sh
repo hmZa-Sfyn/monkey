@@ -69,6 +69,7 @@ mkdir -p "$CFG_DIR"
 cat > "$CFG_DIR/PATH.yaml" <<EOF
 std: $STD_LIB_TARGET
 usr: $LIB_DIR/usr
+monkey: $LIB_DIR/monkey
 tmp: /tmp
 EOF
 
