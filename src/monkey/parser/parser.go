@@ -1227,21 +1227,24 @@ func (p *Parser) parseImportStatement() *ast.ImportStatement {
 	paths := []string{}
 	paths = append(paths, p.curToken.Literal)
 
-	for p.peekTokenIs(token.DOT) {
-		p.nextToken()
+	// Support both dot and slash notation in the same import
+	for p.peekTokenIs(token.DOT) || p.peekTokenIs(token.SLASH) {
+		p.nextToken() // consume separator
 		p.nextToken()
 		paths = append(paths, p.curToken.Literal)
 	}
 
-	path := strings.TrimSpace(strings.Join(paths, "/"))
-	stmt.ImportPath = filepath.Base(path)
+	// Keep original form for error messages
+	rawPath := strings.Join(paths, "/")
+	stmt.ImportPath = rawPath // ← changed meaning: now full requested path
 
-	program, funcs, err := p.getImportedStatements(path)
+	program, funcs, err := p.getImportedStatements(rawPath)
 	if err != nil {
 		p.errors = append(p.errors, err.Error())
 		p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 		return stmt
 	}
+
 	stmt.Functions = funcs
 	stmt.Program = program
 	return stmt
@@ -1249,81 +1252,95 @@ func (p *Parser) parseImportStatement() *ast.ImportStatement {
 
 // getImportedStatements – main import handling function
 func (p *Parser) getImportedStatements(importpath string) (*ast.Program, map[string]*ast.FunctionLiteral, error) {
-	// Remove quotes if present (support both import tmp.abc  and import "tmp/abc")
-	importpath = strings.Trim(importpath, "\"'`")
+	// Remove optional surrounding quotes
+	importpath = strings.Trim(importpath, "\"'` ")
 
-	// Two main supported formats:
-	// 1. prefix.name     → tmp.abc
-	// 2. path/with/slashes → tmp/abc  or std/http/client
+	var prefix, rest string
 
-	var prefix, name string
-
-	// Case 1: dot notation → prefix.name
-	if strings.Contains(importpath, ".") && !strings.Contains(importpath, "/") {
-		parts := strings.SplitN(importpath, ".", 2)
-		if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-			prefix = parts[0]
-			name = parts[1]
-		}
+	// Detect prefix (before first . or /)
+	sepIdx := strings.IndexAny(importpath, "./")
+	if sepIdx > 0 {
+		prefix = importpath[:sepIdx]
+		rest = importpath[sepIdx+1:]
 	} else {
-		// Case 2: slash notation → use whole path after last prefix (or treat as relative)
-		lastSlash := strings.LastIndex(importpath, "/")
-		if lastSlash == -1 {
-			// just "abc" → relative import
-			prefix = ""
-			name = importpath
-		} else {
-			prefix = importpath[:lastSlash]
-			name = importpath[lastSlash+1:]
-		}
+		// No prefix → relative import
+		prefix = ""
+		rest = importpath
 	}
+
+	// Normalize package name (very important for your case!)
+	// monkey-src → monkey_src (or decide on one convention)
+	normalizedPrefix := strings.ReplaceAll(prefix, "-", "_")
 
 	// Load config (~/.mk/cfg/PATH.yaml)
 	configPath := getConfigPath()
-	config, _ := loadSimplePathConfig(configPath) // silent fail → fallback to relative
+	config, _ := loadSimplePathConfig(configPath) // silent fail ok
 
 	var baseDir string
+	var found bool
 
 	if prefix == "" {
-		// No prefix → relative to current file
+		// Relative to current file
 		baseDir = filepath.Dir(p.path)
 		if baseDir == "" || baseDir == "." {
 			baseDir = "."
 		}
-	} else if dir, ok := config[prefix]; ok {
-		// Found in config
-		baseDir = expandTilde(dir)
+		found = true
 	} else {
-		// Unknown prefix → treat as relative path from current dir
+		// Try both original and normalized prefix
+		for _, tryPrefix := range []string{prefix, normalizedPrefix} {
+			if dir, ok := config[tryPrefix]; ok {
+				baseDir = expandTilde(dir)
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		// Fallback: treat as relative (but keep prefix in path)
 		baseDir = filepath.Dir(p.path)
 		if baseDir == "" || baseDir == "." {
 			baseDir = "."
 		}
-		// But keep the prefix in path
-		name = filepath.Join(prefix, name)
+		rest = filepath.Join(prefix, rest)
 	}
 
-	// Final filename
-	filename := name
-	if !strings.HasSuffix(filename, ".mk") {
-		filename += ".mk"
+	// Most common file location patterns
+	candidates := []string{
+		filepath.Join(baseDir, rest+".mk"),
+		filepath.Join(baseDir, rest, "main.mk"),
+		filepath.Join(baseDir, rest, "lib.mk"),
+		filepath.Join(baseDir, rest, "init.mk"),
 	}
 
-	fn := filepath.Join(baseDir, filename)
+	var content []byte
+	var finalPath string
+	var lastErr error
 
-	// Read file
-	f, err := ioutil.ReadFile(fn)
-	if err != nil {
-		return nil, nil, fmt.Errorf("cannot read import file: %s\n(path tried: %s)", importpath, fn)
+	for _, candidate := range candidates {
+		content, lastErr = ioutil.ReadFile(candidate)
+		if lastErr == nil {
+			finalPath = candidate
+			break
+		}
 	}
 
-	// Create lexer & parser
-	l := lexer.New(fn, string(f))
+	if lastErr != nil {
+		return nil, nil, fmt.Errorf(
+			"cannot read import file: %s\n(tried:\n  %s)",
+			importpath,
+			strings.Join(candidates, "\n  "),
+		)
+	}
+
+	// Create lexer & parser with **correct base directory** for nested imports
+	l := lexer.New(finalPath, string(content))
 	var ps *Parser
 	if p.mode&ParseComments == 0 {
-		ps = New(l, filepath.Dir(fn))
+		ps = New(l, filepath.Dir(finalPath)) // ← very important fix
 	} else {
-		ps = NewWithDoc(l, filepath.Dir(fn))
+		ps = NewWithDoc(l, filepath.Dir(finalPath))
 	}
 
 	parsed := ps.ParseProgram()
@@ -1335,28 +1352,26 @@ func (p *Parser) getImportedStatements(importpath string) (*ast.Program, map[str
 	return parsed, ps.Functions, nil
 }
 
-// Helper: returns path to PATH.yaml config
+// ────────────────────────────────────────────────────────────────────────────────
+// The helper functions remain unchanged — they're fine as-is
+// ────────────────────────────────────────────────────────────────────────────────
+
 func getConfigPath() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		// Fallback if we can't get home dir (very rare)
 		return ".mk/cfg/PATH.yaml"
 	}
 
 	if runtime.GOOS == "windows" {
 		return filepath.Join(home, "AppData", "Roaming", "mk", "cfg", "PATH.yaml")
 	}
-	// Linux / macOS
 	return filepath.Join(home, ".mk", "cfg", "PATH.yaml")
 }
 
-// Very simple parser for PATH.yaml with format like:
-// tmp: /tmp
-// my: ~/
 func loadSimplePathConfig(path string) (map[string]string, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return make(map[string]string), err // return empty map on error
+		return make(map[string]string), err
 	}
 
 	result := make(map[string]string)
@@ -1385,7 +1400,6 @@ func loadSimplePathConfig(path string) (map[string]string, error) {
 	return result, nil
 }
 
-// Replaces ~ with actual home directory
 func expandTilde(path string) string {
 	if !strings.HasPrefix(path, "~") {
 		return path
@@ -1393,14 +1407,13 @@ func expandTilde(path string) string {
 
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return path // fallback
+		return path
 	}
 
 	if path == "~" {
 		return home
 	}
 
-	// ~abc → $HOME/abc
 	return filepath.Join(home, path[2:])
 }
 

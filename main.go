@@ -13,9 +13,12 @@ import (
 	"monkey/parser"
 	"monkey/repl"
 	"os"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -54,35 +57,20 @@ func runProgram(debug bool, filename string) {
 		eval.Dbg.SetFunctions(p.Functions)
 		eval.Dbg.ShowBanner()
 
-		dbgInfosArr := parser.SplitSlice(parser.DebugInfos) //[][]ast.Node
+		dbgInfosArr := parser.SplitSlice(parser.DebugInfos)
 		eval.Dbg.SetDbgInfos(dbgInfosArr)
-		// for idx, dbgInfos := range dbgInfosArr {
-		// 	for _, dbgInfo := range dbgInfos {
-		// 		fmt.Printf("idx:%d, Line:<%d-%d>, node.Type=%T, node=<%s>\n", idx, dbgInfo.Pos().Line, dbgInfo.End().Line, dbgInfo, dbgInfo.String())
-		// 	}
-		// }
 
 		eval.MsgHandler = message.NewMessageHandler()
 		eval.MsgHandler.AddListener(eval.Dbg)
-
 	}
 
 	result := eval.Eval(program, scope)
 	if result.Type() == eval.ERROR_OBJ {
 		fmt.Println(result.Inspect())
 	}
-
-	// e := eval.Eval(program, scope)
-	//
-	//	if e.Inspect() != "nil" {
-	//		fmt.Println(e.Inspect())
-	//	}
 }
 
 // Register go package methods/types
-// Note here, we use 'gfmt', 'glog', 'gos' 'gtime', because in magpie
-// we already have built in module 'fmt', 'log' 'os', 'time'.
-// And Here we demonstrate the use of import go language's methods.
 func RegisterGoGlobals() {
 	eval.RegisterFunctions("gfmt", map[string]interface{}{
 		"Errorf":   fmt.Errorf,
@@ -223,8 +211,244 @@ func RegisterGoGlobals() {
 	})
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Package config (flat key: value format)
+// ──────────────────────────────────────────────────────────────────────────────
+
+type PackageConfig struct {
+	Packages map[string]string
+}
+
+const (
+	configDirName  = "mk"
+	configFileName = "PATH.yaml"
+)
+
+func getConfigPath() (string, error) {
+	u, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	var configBase string
+	if runtime.GOOS == "windows" {
+		appData := os.Getenv("APPDATA")
+		if appData == "" {
+			appData = filepath.Join(u.HomeDir, "AppData", "Roaming")
+		}
+		configBase = filepath.Join(appData, configDirName, "cfg")
+	} else {
+		configBase = filepath.Join(u.HomeDir, "."+configDirName, "cfg")
+	}
+
+	return filepath.Join(configBase, configFileName), nil
+}
+
+func loadPackageConfig() (*PackageConfig, error) {
+	path, err := getConfigPath()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &PackageConfig{Packages: make(map[string]string)}, nil
+		}
+		return nil, err
+	}
+
+	packages := make(map[string]string)
+	lines := strings.Split(string(data), "\n")
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		// ~ expansion
+		if strings.HasPrefix(value, "~/") {
+			home, _ := os.UserHomeDir()
+			value = filepath.Join(home, value[2:])
+		} else if value == "~" {
+			home, _ := os.UserHomeDir()
+			value = home
+		}
+
+		if key != "" {
+			packages[key] = filepath.Clean(value)
+		}
+	}
+
+	return &PackageConfig{Packages: packages}, nil
+}
+
+func savePackageConfig(cfg *PackageConfig) error {
+	path, err := getConfigPath()
+	if err != nil {
+		return err
+	}
+
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	var sb strings.Builder
+
+	keys := make([]string, 0, len(cfg.Packages))
+	for k := range cfg.Packages {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, name := range keys {
+		p := cfg.Packages[name]
+
+		// Try to use ~ when possible
+		home, _ := os.UserHomeDir()
+		if strings.HasPrefix(p, home) {
+			rel := strings.TrimPrefix(p, home)
+			if rel == "" {
+				p = "~"
+			} else if strings.HasPrefix(rel, string(os.PathSeparator)) {
+				p = "~" + rel
+			}
+		}
+
+		sb.WriteString(fmt.Sprintf("%s: %s\n", name, p))
+	}
+
+	return os.WriteFile(path, []byte(sb.String()), 0644)
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Package management commands
+// ──────────────────────────────────────────────────────────────────────────────
+
+func handlePkgCommand(args []string) error {
+	if len(args) == 0 {
+		fmt.Println("Usage:")
+		fmt.Println("  monkey pkg -init <name> [-dir <path>]")
+		fmt.Println("  monkey pkg -list")
+		return nil
+	}
+
+	switch args[0] {
+	case "-list", "--list":
+		return cmdPkgList()
+
+	case "-init", "--init":
+		return cmdPkgInit(args[1:])
+
+	default:
+		return fmt.Errorf("unknown pkg command: %s\nUse one of: -init, -list", args[0])
+	}
+}
+
+func cmdPkgList() error {
+	cfg, err := loadPackageConfig()
+	if err != nil {
+		return err
+	}
+
+	if len(cfg.Packages) == 0 {
+		fmt.Println("No packages registered yet.")
+		p, _ := getConfigPath()
+		fmt.Printf("Config file: %s\n", p)
+		return nil
+	}
+
+	fmt.Println("Known Monkey packages:")
+	fmt.Println("")
+
+	for _, name := range sortedKeys(cfg.Packages) {
+		fmt.Printf("%-12s %s\n", name+":", cfg.Packages[name])
+	}
+
+	return nil
+}
+
+func cmdPkgInit(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("package name is required\nExample: monkey pkg -init mylib")
+	}
+
+	pkgName := args[0]
+	dirPath := "."
+
+	for i := 1; i < len(args)-1; i++ {
+		if args[i] == "-dir" || args[i] == "--dir" {
+			dirPath = args[i+1]
+			break
+		}
+	}
+
+	absDir, err := filepath.Abs(dirPath)
+	if err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(absDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(absDir, 0755); err != nil {
+			return fmt.Errorf("failed to create directory: %v", err)
+		}
+	}
+
+	filesToCreate := []struct {
+		path    string
+		content string
+	}{
+		{"main.mk", "// Package: " + pkgName + "\nputs(\"Hello from " + pkgName + " package!\")\n"},
+		{"lib.mk", "// Your library code here\n"},
+	}
+
+	for _, f := range filesToCreate {
+		full := filepath.Join(absDir, f.path)
+		if _, err := os.Stat(full); err == nil {
+			fmt.Printf("Warning: %s already exists, skipping...\n", full)
+			continue
+		}
+		if err := os.WriteFile(full, []byte(f.content), 0644); err != nil {
+			return fmt.Errorf("failed to create %s: %v", full, err)
+		}
+	}
+
+	cfg, err := loadPackageConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg.Packages[pkgName] = absDir
+
+	if err := savePackageConfig(cfg); err != nil {
+		return fmt.Errorf("failed to save config: %v", err)
+	}
+
+	fmt.Printf("Package '%s' created at:\n  %s\n", pkgName, absDir)
+	fmt.Println("Registered in package config.")
+	return nil
+}
+
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 func main() {
-	// Flags
 	debug := flag.Bool("d", false, "enable debug mode")
 	flag.BoolVar(debug, "debug", false, "enable debug mode")
 
@@ -235,13 +459,22 @@ func main() {
 
 	flag.Parse()
 
-	// Help
+	args := flag.Args()
+
+	// Package commands
+	if len(args) >= 1 && args[0] == "pkg" {
+		if err := handlePkgCommand(args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	if *help {
 		usage()
 		return
 	}
 
-	// Execute code from string using -e
 	if *expr != "" {
 		if err := runExpr(*expr, *debug); err != nil {
 			fmt.Println("Error:", err)
@@ -250,61 +483,43 @@ func main() {
 		return
 	}
 
-	// No args -> REPL
-	args := flag.Args()
 	if len(args) == 0 {
 		fmt.Println("monkey programming language REPL\n")
 		repl.Start(os.Stdout, true)
 		return
 	}
 
-	// Run file
 	runProgram(*debug, args[0])
 }
 
 func usage() {
 	fmt.Println("Usage:")
-	fmt.Println("  monkey                 Start REPL")
-	fmt.Println("  monkey file.mk         Run file")
-	fmt.Println("  monkey -d file.mk      Run file in debug mode")
-	fmt.Println("  monkey -e \"code\"       Execute code string")
-	fmt.Println("  monkey -h              Show help")
+	fmt.Println("  monkey                       Start REPL")
+	fmt.Println("  monkey file.mk               Run file")
+	fmt.Println("  monkey -d file.mk            Run file in debug mode")
+	fmt.Println("  monkey -e \"code\"             Execute code string")
+	fmt.Println("  monkey pkg -init <name> [-dir <path>]   Create new package")
+	fmt.Println("  monkey pkg -list             List registered packages")
+	fmt.Println("  monkey -h                    Show help")
 }
 
-// write code to temp file then run it
 func runExpr(code string, debug bool) error {
-	// Force system temp dir
-	tmpDir := os.TempDir()
-
-	// If os.TempDir returns a relative dir, make it absolute
-	if !filepath.IsAbs(tmpDir) {
-		tmpDir, _ = filepath.Abs(tmpDir)
-	}
-
-	// Create /tmp/monkey folder to be safe
-	tmpDir = filepath.Join(tmpDir, "monkey")
+	tmpDir := filepath.Join(os.TempDir(), "monkey")
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		return err
 	}
 
-	// Create a temp file in that directory
 	tmpFile, err := os.CreateTemp(tmpDir, "monkey-*.mk")
 	if err != nil {
 		return err
 	}
 	defer os.Remove(tmpFile.Name())
 
-	// Write the code into it
 	if _, err := tmpFile.WriteString(code); err != nil {
 		return err
 	}
 	tmpFile.Close()
 
-	// Debug: print file path
-	// fmt.Println("Temp file created at:", tmpFile.Name())
-
-	// Run the temp file
-	// debug: println(tmpFile.Name())
 	runProgram(debug, tmpFile.Name())
 	return nil
 }
