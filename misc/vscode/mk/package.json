@@ -1,9 +1,9 @@
 {
     "name": "mp",
-    "displayName": "magpie",
+    "displayName": "monkey",
     "description": "monkey language",
     "version": "0.0.1",
-    "publisher": "magpie",
+    "publisher": "monkey",
     "engines": {
         "vscode": "^1.17.0"
     },
@@ -12,13 +12,13 @@
     ],
     "contributes": {
         "languages": [{
-            "id": "magpie",
-            "aliases": ["magpie", "magpie"],
+            "id": "monkey",
+            "aliases": ["monkey", "monkey"],
             "extensions": [".mk"],
             "configuration": "./language-configuration.json"
         }],
         "grammars": [{
-            "language": "magpie",
+            "language": "monkey",
             "scopeName": "source.mk",
             "path": "./syntaxes/magpie.tmLanguage"
         }]

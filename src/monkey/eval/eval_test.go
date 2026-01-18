@@ -672,7 +672,7 @@ if (10 > 1) {
 		{`"abc" / "abc"`, "unsupported operator for infix expression: '/' and types STRING and STRING"},
 		{`"abc" > "abc"`, "unsupported operator for infix expression: '>' and types STRING and STRING"},
 		{`"abc" < "abc"`, "unsupported operator for infix expression: '<' and types STRING and STRING"},
-		{`{"name":"Magpie"}[fn(x) {x}];`, "key error: type FUNCTION is not hashable"},
+		{`{"name":"monkey"}[fn(x) {x}];`, "key error: type FUNCTION is not hashable"},
 	}
 
 	for _, tt := range tests {

@@ -150,4 +150,4 @@ syn sync maxlines=100
 hi def link magpieFunction		Function
 hi def link magpieBraces		Function
 
-let b:current_syntax = "magpie"
+let b:current_syntax = "monkey"
