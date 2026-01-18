@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-//for strftime function, copied from 'https://github.com/billhathaway/strftime'
+// for strftime function, copied from 'https://github.com/billhathaway/strftime'
 var conversions = map[byte]string{
 	'a': "Mon",         // day name abbreviated
 	'A': "Monday",      // day name full
@@ -208,7 +208,7 @@ func (t *TimeObj) Local(line string, args ...Object) Object {
 	return t
 }
 
-//to timestamp(UTC)
+// to timestamp(UTC)
 func (t *TimeObj) Unix(line string, args ...Object) Object {
 	if t.Valid == false {
 		return NIL
@@ -218,7 +218,7 @@ func (t *TimeObj) Unix(line string, args ...Object) Object {
 	return NewInteger(ret)
 }
 
-//to timestamp(UTC)
+// to timestamp(UTC)
 func (t *TimeObj) UnixNano(line string, args ...Object) Object {
 	if t.Valid == false {
 		return NIL
@@ -228,7 +228,7 @@ func (t *TimeObj) UnixNano(line string, args ...Object) Object {
 	return NewInteger(ret)
 }
 
-//to timestamp(LOCAL)
+// to timestamp(LOCAL)
 func (t *TimeObj) UnixLocal(line string, args ...Object) Object {
 	if len(args) != 0 {
 		return NewError(line, ARGUMENTERROR, "0", len(args))
@@ -246,7 +246,7 @@ func (t *TimeObj) UnixLocal(line string, args ...Object) Object {
 	return NewInteger(sr)
 }
 
-//to timestamp(LOCAL)
+// to timestamp(LOCAL)
 func (t *TimeObj) UnixLocalNano(line string, args ...Object) Object {
 	if len(args) != 0 {
 		return NewError(line, ARGUMENTERROR, "0", len(args))
@@ -902,7 +902,7 @@ func timeToEpoch(time time.Time) float64 {
 	return float64(time.UnixNano() / (1000 * 1000))
 }
 
-//ParseDuration with support for Y(year), M(month) and D(day)
+// ParseDuration with support for Y(year), M(month) and D(day)
 func ParseDuration(t *TimeObj, s string) (*TimeObj, error) {
 	result := &TimeObj{Tm: t.Tm, Valid: true}
 

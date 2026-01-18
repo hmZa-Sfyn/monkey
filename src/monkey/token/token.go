@@ -176,7 +176,9 @@ var keywords = map[string]TokenType{
 	"let":       LET,
 	"const":     CONST,
 	"true":      TRUE,
+	"True":      TRUE,
 	"false":     FALSE,
+	"False":     FALSE,
 	"if":        IF,
 	"elif":      ELIF,
 	"else":      ELSE,
@@ -243,7 +245,7 @@ var keywords = map[string]TokenType{
 	"service": SERVICE,
 }
 
-//for debug & testing
+// for debug & testing
 func (tt TokenType) String() string {
 	switch tt {
 	case EOF:
@@ -539,7 +541,7 @@ type Token struct {
 	Literal string
 }
 
-//Stringer method for Token
+// Stringer method for Token
 func (t Token) String() string {
 	return fmt.Sprintf("Pos: %s, Type: %s, Literal: %s", t.Pos, t.Type, t.Literal)
 }
