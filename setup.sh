@@ -4,7 +4,7 @@ set -euo pipefail
 interpreter_name="monkey"
 binary_name="monkey"
 go_file="./main.go"
-STD_LIBS_SOURCE_DIR="./libs"          # ← change to "./lib" if that's your real folder name
+STD_LIBS_SOURCE_DIR="./lib"          # ← change to "./lib" if that's your real folder name
 
 # Detect OS
 OS="$(uname -s)"
