@@ -1,3 +1,1 @@
-fn ABC() {
-	println("hello from ABC")
-}
+println("hello from ABC")
