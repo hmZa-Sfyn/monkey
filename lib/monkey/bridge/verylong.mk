@@ -161,7 +161,6 @@ fn Mod(a,b) {
     }
 }
 
-
 fn Pyint(ops) {
     return new pyint(`python3 -c "print($ops)"`)
 }

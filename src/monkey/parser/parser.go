@@ -9,7 +9,6 @@ import (
 	"monkey/token"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -1227,194 +1226,63 @@ func (p *Parser) parseImportStatement() *ast.ImportStatement {
 	paths := []string{}
 	paths = append(paths, p.curToken.Literal)
 
-	// Support both dot and slash notation in the same import
-	for p.peekTokenIs(token.DOT) || p.peekTokenIs(token.SLASH) {
-		p.nextToken() // consume separator
+	for p.peekTokenIs(token.DOT) {
+		p.nextToken()
 		p.nextToken()
 		paths = append(paths, p.curToken.Literal)
 	}
 
-	// Keep original form for error messages
-	rawPath := strings.Join(paths, "/")
-	stmt.ImportPath = rawPath // ← changed meaning: now full requested path
+	path := strings.TrimSpace(strings.Join(paths, "/"))
+	stmt.ImportPath = filepath.Base(path)
 
-	program, funcs, err := p.getImportedStatements(rawPath)
+	program, funcs, err := p.getImportedStatements(path)
 	if err != nil {
 		p.errors = append(p.errors, err.Error())
 		p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 		return stmt
 	}
-
 	stmt.Functions = funcs
 	stmt.Program = program
 	return stmt
 }
 
-// getImportedStatements – main import handling function
 func (p *Parser) getImportedStatements(importpath string) (*ast.Program, map[string]*ast.FunctionLiteral, error) {
-	// Remove optional surrounding quotes
-	importpath = strings.Trim(importpath, "\"'` ")
+	path := p.path
 
-	var prefix, rest string
-
-	// Detect prefix (before first . or /)
-	sepIdx := strings.IndexAny(importpath, "./")
-	if sepIdx > 0 {
-		prefix = importpath[:sepIdx]
-		rest = importpath[sepIdx+1:]
-	} else {
-		// No prefix → relative import
-		prefix = ""
-		rest = importpath
+	if path == "" {
+		path = "."
 	}
 
-	// Normalize package name (very important for your case!)
-	// monkey-src → monkey_src (or decide on one convention)
-	normalizedPrefix := strings.ReplaceAll(prefix, "-", "_")
-
-	// Load config (~/.mk/cfg/PATH.yaml)
-	configPath := getConfigPath()
-	config, _ := loadSimplePathConfig(configPath) // silent fail ok
-
-	var baseDir string
-	var found bool
-
-	if prefix == "" {
-		// Relative to current file
-		baseDir = filepath.Dir(p.path)
-		if baseDir == "" || baseDir == "." {
-			baseDir = "."
-		}
-		found = true
-	} else {
-		// Try both original and normalized prefix
-		for _, tryPrefix := range []string{prefix, normalizedPrefix} {
-			if dir, ok := config[tryPrefix]; ok {
-				baseDir = expandTilde(dir)
-				found = true
-				break
+	fn := filepath.Join(path, importpath+".mk")
+	f, err := ioutil.ReadFile(fn)
+	if err != nil { //error occurred, maybe the file do not exists.
+		// Check for 'MAGPIE_ROOT' environment variable
+		importRoot := os.Getenv("MAGPIE_ROOT")
+		if len(importRoot) == 0 { //'MAGPIE_ROOT' environment variable is not set
+			return nil, nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.mk, %s", p.curToken.Pos, importpath, path)
+		} else {
+			fn = filepath.Join(importRoot, importpath+".mk")
+			e, err := ioutil.ReadFile(fn)
+			if err != nil {
+				return nil, nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.mk, %s", p.curToken.Pos, importpath, importRoot)
 			}
+			f = e
 		}
 	}
 
-	if !found {
-		// Fallback: treat as relative (but keep prefix in path)
-		baseDir = filepath.Dir(p.path)
-		if baseDir == "" || baseDir == "." {
-			baseDir = "."
-		}
-		rest = filepath.Join(prefix, rest)
-	}
-
-	// Most common file location patterns
-	candidates := []string{
-		filepath.Join(baseDir, rest+".mk"),
-		filepath.Join(baseDir, rest, "main.mk"),
-		filepath.Join(baseDir, rest, "lib.mk"),
-		filepath.Join(baseDir, rest, "init.mk"),
-	}
-
-	var content []byte
-	var finalPath string
-	var lastErr error
-
-	for _, candidate := range candidates {
-		content, lastErr = ioutil.ReadFile(candidate)
-		if lastErr == nil {
-			finalPath = candidate
-			break
-		}
-	}
-
-	if lastErr != nil {
-		return nil, nil, fmt.Errorf(
-			"cannot read import file: %s\n(tried:\n  %s)",
-			importpath,
-			strings.Join(candidates, "\n  "),
-		)
-	}
-
-	// Create lexer & parser with **correct base directory** for nested imports
-	l := lexer.New(finalPath, string(content))
+	l := lexer.New(fn, string(f))
 	var ps *Parser
 	if p.mode&ParseComments == 0 {
-		ps = New(l, filepath.Dir(finalPath)) // ← very important fix
+		ps = New(l, path)
 	} else {
-		ps = NewWithDoc(l, filepath.Dir(finalPath))
+		ps = NewWithDoc(l, path)
 	}
-
 	parsed := ps.ParseProgram()
 	if len(ps.errors) != 0 {
 		p.errors = append(p.errors, ps.errors...)
 		p.errorLines = append(p.errorLines, ps.errorLines...)
 	}
-
 	return parsed, ps.Functions, nil
-}
-
-// ────────────────────────────────────────────────────────────────────────────────
-// The helper functions remain unchanged — they're fine as-is
-// ────────────────────────────────────────────────────────────────────────────────
-
-func getConfigPath() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ".mk/cfg/PATH.yaml"
-	}
-
-	if runtime.GOOS == "windows" {
-		return filepath.Join(home, "AppData", "Roaming", "mk", "cfg", "PATH.yaml")
-	}
-	return filepath.Join(home, ".mk", "cfg", "PATH.yaml")
-}
-
-func loadSimplePathConfig(path string) (map[string]string, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return make(map[string]string), err
-	}
-
-	result := make(map[string]string)
-
-	lines := strings.Split(string(data), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "---") || strings.HasPrefix(line, "-") {
-			continue
-		}
-
-		parts := strings.SplitN(line, ":", 2)
-		if len(parts) != 2 {
-			continue
-		}
-
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-		if key == "" || value == "" {
-			continue
-		}
-
-		result[key] = value
-	}
-
-	return result, nil
-}
-
-func expandTilde(path string) string {
-	if !strings.HasPrefix(path, "~") {
-		return path
-	}
-
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return path
-	}
-
-	if path == "~" {
-		return home
-	}
-
-	return filepath.Join(home, path[2:])
 }
 
 func (p *Parser) parseDoLoopExpression() ast.Expression {
