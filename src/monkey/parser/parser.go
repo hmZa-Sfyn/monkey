@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"monkey/token"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -1248,26 +1250,77 @@ func (p *Parser) parseImportStatement() *ast.ImportStatement {
 
 func (p *Parser) getImportedStatements(importpath string) (*ast.Program, map[string]*ast.FunctionLiteral, error) {
 	path := p.path
-
 	if path == "" {
 		path = "."
 	}
 
-	fn := filepath.Join(path, importpath+".mk")
-	f, err := ioutil.ReadFile(fn)
-	if err != nil { //error occurred, maybe the file do not exists.
-		// Check for 'MAGPIE_ROOT' environment variable
-		importRoot := os.Getenv("MAGPIE_ROOT")
-		if len(importRoot) == 0 { //'MAGPIE_ROOT' environment variable is not set
-			return nil, nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.mk, %s", p.curToken.Pos, importpath, path)
-		} else {
-			fn = filepath.Join(importRoot, importpath+".mk")
-			e, err := ioutil.ReadFile(fn)
-			if err != nil {
-				return nil, nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.mk, %s", p.curToken.Pos, importpath, importRoot)
-			}
-			f = e
+	// DEBUG: print current parser path
+	//fmt.Fprintf(os.Stderr, "[DEBUG] Current parser path: %s\n", path)
+
+	// Extract base name (e.g., "monkey" from "monkey/lang" or "monkey.lang")
+	baseName := importpath
+	if idx := strings.IndexAny(importpath, "/."); idx != -1 {
+		baseName = importpath[:idx]
+	}
+
+	// Determine config file path: ~/.mk/cfg/PATH.yaml
+	var homeDir string
+	if runtime.GOOS == "windows" {
+		homeDir = os.Getenv("USERPROFILE")
+		if homeDir == "" {
+			homeDir = os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 		}
+	} else {
+		homeDir = os.Getenv("HOME")
+	}
+	configFile := filepath.Join(homeDir, ".mk", "cfg", "PATH.yaml")
+
+	// DEBUG: print config file path
+	//fmt.Fprintf(os.Stderr, "[DEBUG] Config file path: %s\n", configFile)
+
+	resolvedBase := baseName
+	// Try to read and parse PATH.yaml manually
+	if data, err := ioutil.ReadFile(configFile); err == nil {
+		scanner := bufio.NewScanner(strings.NewReader(string(data)))
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			if idx := strings.Index(line, ":"); idx != -1 {
+				key := strings.TrimSpace(line[:idx])
+				value := strings.TrimSpace(line[idx+1:])
+				value = strings.Trim(value, `"'`) // remove optional quotes
+				if key == baseName {
+					resolvedBase = value
+					break
+				}
+			}
+		}
+	}
+
+	// Build final resolved path
+	resolvedPath := resolvedBase + importpath[len(baseName):]
+
+	// DEBUG: print resolved import path
+	//fmt.Fprintf(os.Stderr, "[DEBUG] Resolved import path: %s -> %s\n", importpath, resolvedPath)
+
+	// ✅ CRITICAL FIX: choose path based on whether config was used
+	var fn string
+	if resolvedBase != baseName {
+		// Config provided an absolute path → use it directly
+		fn = resolvedPath + ".mk"
+	} else {
+		// No config match → relative to current parser path
+		fn = filepath.Join(path, resolvedPath+".mk")
+	}
+
+	// DEBUG: print attempted file path
+	//fmt.Fprintf(os.Stderr, "[DEBUG] Attempting to load file: %s\n", fn)
+
+	f, err := ioutil.ReadFile(fn)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.mk, %s", p.curToken.Pos, importpath, path)
 	}
 
 	l := lexer.New(fn, string(f))

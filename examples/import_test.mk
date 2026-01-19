@@ -1,3 +1,3 @@
 import tmp.abc
 
-abc.Pp()
+abc.HELLO()
