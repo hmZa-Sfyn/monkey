@@ -1,7 +1,12 @@
 package eval
 
-import "fmt"
-import "strings"
+import (
+	"fmt"
+	"io/ioutil"
+	"regexp"
+	"strconv"
+	"strings"
+)
 
 // constants for error types
 const (
@@ -126,22 +131,107 @@ var errorType = map[int]string{
 }
 
 func NewError(line string, t int, args ...interface{}) Object {
-	msg := fmt.Sprintf(errorType[t], args...) + " at line " + strings.TrimLeft(line, " \t")
-	return &Error{Kind: t, Message: msg}
+	msg := fmt.Sprintf(errorType[t], args...)
+	return &Error{Kind: t, Message: msg, PosMarker: line}
 }
 
 type Error struct {
-	Kind    int
-	Message string
+	Kind      int
+	Message   string
+	PosMarker string // e.g., "</path/to/file.mk:5>"
 }
 
 func (e Error) Error() string {
-	return e.Message
+	return e.Message + " (at line) " + strings.TrimLeft(e.PosMarker, " \t")
 }
 
-func (e *Error) Inspect() string  { return "Runtime Error:" + e.Message + "\n" }
 func (e *Error) Type() ObjectType { return ERROR_OBJ }
+
+// extractIdentifier tries to pull the quoted identifier from common error messages
+func (e *Error) extractIdentifier() string {
+	// Match 'identifier' inside single quotes
+	re := regexp.MustCompile(`'([^']*)'`)
+	matches := re.FindStringSubmatch(e.Message)
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return ""
+}
+
+func (e *Error) Inspect() string {
+	var sb strings.Builder
+
+	// Parse file and line
+	rePos := regexp.MustCompile(`<(/[^:>]+):(\d+)>`)
+	matches := rePos.FindStringSubmatch(e.PosMarker)
+	if matches == nil {
+		// Fallback if position not parseable
+		sb.WriteString("\033[1;31merror:\033[0m ")
+		sb.WriteString(e.Message)
+		sb.WriteString("\n")
+		return sb.String()
+	}
+
+	filePath := matches[1]
+	lineNum, _ := strconv.Atoi(matches[2])
+	if lineNum <= 0 {
+		lineNum = 1
+	}
+
+	// Read source line
+	var sourceLine string
+	if content, err := ioutil.ReadFile(filePath); err == nil {
+		lines := strings.Split(string(content), "\n")
+		if lineNum <= len(lines) {
+			sourceLine = strings.TrimRight(lines[lineNum-1], "\r\n")
+		}
+	}
+
+	// Try to find the problematic identifier (e.g., 'y')
+	identifier := e.extractIdentifier()
+
+	// Build underline
+	var underline string
+	if identifier != "" && sourceLine != "" {
+		if idx := strings.Index(sourceLine, identifier); idx != -1 {
+			prefix := strings.Repeat(" ", idx)
+			mark := strings.Repeat("^", len(identifier))
+			underline = prefix + "\033[1;31m" + mark + "\033[0m"
+		} else {
+			// Fallback: underline first non-whitespace
+			trimmed := len(sourceLine) - len(strings.TrimLeft(sourceLine, " \t"))
+			underline = strings.Repeat(" ", trimmed) + "\033[1;31m^\033[0m"
+		}
+	} else {
+		// Just point to start
+		underline = "\033[1;31m^\033[0m"
+	}
+
+	// Format like Rust:
+	// --> FILE:LINE
+	//   |
+	// L | code
+	//   | ^~~~
+	//   |
+	// error: message
+
+	sb.WriteString(fmt.Sprintf("\033[1;90m-->\033[0m \033[1m%s:%d\033[0m\n", filePath, lineNum))
+	sb.WriteString("\033[1;90m |\033[0m\n")
+
+	// Line number formatting (right-aligned to 2 digits, but flexible)
+	lineNumStr := strconv.Itoa(lineNum)
+	sb.WriteString(fmt.Sprintf("\033[1;37m%2s\033[0m\033[1;90m |\033[0m \033[90m%s\033[0m\n", lineNumStr, sourceLine))
+
+	if underline != "" {
+		sb.WriteString(fmt.Sprintf("\033[1;90m |\033[0m   %s\n", underline))
+	}
+
+	sb.WriteString("\033[1;90m |\033[0m\n")
+	sb.WriteString(fmt.Sprintf("\033[1;31merror:\033[0m %s\n", e.Message))
+
+	return sb.String()
+}
+
 func (e *Error) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
-	//	return NewError(line, NOMETHODERROR, method, e.Type())
 	return NewError(line, GENERICERROR, e.Message)
 }
