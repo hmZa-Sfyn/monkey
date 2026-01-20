@@ -772,7 +772,7 @@ func (p *Parser) parseTupleExpression(tok token.Token, expr ast.Expression) ast.
 			p.nextToken()
 		default:
 			oldToken.Pos.Col = oldToken.Pos.Col + len(oldToken.Literal)
-			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be ',' or ')', got %s instead", oldToken.Pos, p.curToken.Type)
+			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be ',' or ')', got %s instead.", oldToken.Pos, p.curToken.Type)
 			p.errors = append(p.errors, msg)
 			p.errorLines = append(p.errorLines, oldToken.Pos.Sline())
 			return nil
@@ -1783,7 +1783,7 @@ func (p *Parser) parseIfMacroStatement() *ast.IfMacroStatement {
 
 	if !p.expectPeek(token.IDENT) { //macro name
 		pos := p.fixPosCol()
-		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be 'IDENT', got %s instead", pos, p.peekToken.Type)
+		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be 'IDENT', got %s instead.", pos, p.peekToken.Type)
 		p.errors = append(p.errors, msg)
 		p.errorLines = append(p.errorLines, pos.Sline())
 		return nil
@@ -1937,7 +1937,7 @@ func (p *Parser) parseIndexExpression(arr ast.Expression) ast.Expression {
 		p.nextToken()
 	} else {
 		pos := p.fixPosCol()
-		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be ']', got %s instead", pos, p.curToken.Type)
+		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be ']', got %s instead.", pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
 		p.errorLines = append(p.errorLines, pos.Sline())
 	}
@@ -2020,7 +2020,7 @@ func (p *Parser) parseHashExpression() ast.Expression {
 		return p.parseHashListComprehension(curToken, keyOrVariable, keyExpr, valueExpr, token.RBRACE)
 	} else {
 		pos := p.fixPosCol()
-		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be ':', got %s instead", pos, p.peekToken.Type)
+		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be ':', got %s instead.", pos, p.peekToken.Type)
 		p.errors = append(p.errors, msg)
 		p.errorLines = append(p.errorLines, pos.Sline())
 	}
@@ -2094,7 +2094,7 @@ func (p *Parser) parseHashExpression() ast.Expression {
 //		return hash
 //	} else {
 //		pos := p.fixPosCol()
-//		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be ':' or '=>', got %s instead",pos, p.peekToken.Type)
+//		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be ':' or '=>', got %s instead.",pos, p.peekToken.Type)
 //		p.errors = append(p.errors, msg)
 //	}
 //
@@ -2389,7 +2389,7 @@ func (p *Parser) parseCaseExpression() ast.Expression {
 			} //end for
 
 			if !p.curTokenIs(token.LBRACE) {
-				msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be '{', got %s instead", p.curToken.Pos, p.curToken.Type)
+				msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be '{', got %s instead.", p.curToken.Pos, p.curToken.Type)
 				p.errors = append(p.errors, msg)
 				p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 			}
@@ -2761,7 +2761,7 @@ func (p *Parser) parseClassLiteralForAnno() ast.Expression {
 		p.nextToken()
 	}
 	if !p.curTokenIs(token.LBRACE) {
-		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be '{', got %s instead", p.curToken.Pos, p.curToken.Type)
+		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be '{', got %s instead.", p.curToken.Pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
 		p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 		return nil
@@ -2807,7 +2807,7 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 		p.nextToken()
 	}
 	if !p.curTokenIs(token.LBRACE) {
-		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be '{', got %s instead", p.curToken.Pos, p.curToken.Type)
+		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be '{', got %s instead.", p.curToken.Pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
 		p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 		return nil
@@ -2900,7 +2900,7 @@ LABEL:
 		} else { //marker annotation, e.g. @Demo
 			//only 'property' and 'function' can have annotations
 			if !p.peekTokenIs(token.FUNCTION) && !p.peekTokenIs(token.PROPERTY) && !p.peekTokenIs(token.AT) && !p.peekTokenIs(token.STATIC) {
-				msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be 'fn'| 'property'|'static', or another annotation, got '%s' instead", p.peekToken.Pos, p.peekToken.Type)
+				msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be 'fn'| 'property'|'static', or another annotation, got '%s' instead.", p.peekToken.Pos, p.peekToken.Type)
 				p.errors = append(p.errors, msg)
 				p.errorLines = append(p.errorLines, p.peekToken.Pos.Sline())
 				return nil
@@ -2931,13 +2931,13 @@ LABEL:
 
 		if tokenIsLParen {
 			if !p.curTokenIs(token.RPAREN) {
-				msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be ')', got '%s' instead", p.curToken.Pos, p.curToken.Type)
+				msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be ')', got '%s' instead.", p.curToken.Pos, p.curToken.Type)
 				p.errors = append(p.errors, msg)
 				p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 				return nil
 			}
 		} else if !p.curTokenIs(token.RBRACE) {
-			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be '}', got '%s' instead", p.curToken.Pos, p.curToken.Type)
+			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be '}', got '%s' instead.", p.curToken.Pos, p.curToken.Type)
 			p.errors = append(p.errors, msg)
 			p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 			return nil
@@ -3199,7 +3199,7 @@ func (p *Parser) parseStrExpressionArray(a []ast.Expression) []ast.Expression {
 
 	p.nextToken()
 	if !p.curTokenIs(token.IDENT) && !p.curTokenIs(token.INT) && !p.curTokenIs(token.FLOAT) {
-		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be 'IDENT|INT|FLOAT', got %s instead", p.curToken.Pos, p.curToken.Type)
+		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be 'IDENT|INT|FLOAT', got %s instead.", p.curToken.Pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
 		p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 		return nil
@@ -3210,7 +3210,7 @@ func (p *Parser) parseStrExpressionArray(a []ast.Expression) []ast.Expression {
 		p.nextToken()
 		p.nextToken()
 		if !p.curTokenIs(token.IDENT) && !p.curTokenIs(token.INT) && !p.curTokenIs(token.FLOAT) {
-			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be 'IDENT|INT|FLOAT', got %s instead", p.curToken.Pos, p.curToken.Type)
+			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be 'IDENT|INT|FLOAT', got %s instead.", p.curToken.Pos, p.curToken.Type)
 			p.errors = append(p.errors, msg)
 			p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 			return nil
@@ -3715,7 +3715,7 @@ func (p *Parser) parseDiamond() ast.Expression {
 func (p *Parser) parseDefineStatement() ast.Statement {
 	if !p.expectPeek(token.IDENT) { //macro name
 		pos := p.fixPosCol()
-		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be 'IDENT', got %s instead", pos, p.peekToken.Type)
+		msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be 'IDENT', got %s instead.", pos, p.peekToken.Type)
 		p.errors = append(p.errors, msg)
 		p.errorLines = append(p.errorLines, pos.Sline())
 		return nil
@@ -3814,7 +3814,7 @@ func (p *Parser) parseServiceStmt(s *ast.ServiceStatement) ast.Statement {
 			return nil
 		}
 		if p.curToken.Literal != "route" {
-			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be 'route', got '%s' instead", p.curToken.Pos, p.curToken.Literal)
+			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be 'route', got '%s' instead.", p.curToken.Pos, p.curToken.Literal)
 			p.errors = append(p.errors, msg)
 			p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 			return nil
@@ -3844,7 +3844,7 @@ func (p *Parser) parseServiceStmt(s *ast.ServiceStatement) ast.Statement {
 		}
 
 		if !p.curTokenIs(token.RPAREN) {
-			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be ')', got '%s' instead", p.curToken.Pos, p.curToken.Type)
+			msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected token to be ')', got '%s' instead.", p.curToken.Pos, p.curToken.Type)
 			p.errors = append(p.errors, msg)
 			p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 			return nil
@@ -3871,7 +3871,7 @@ func (p *Parser) parseServiceStmt(s *ast.ServiceStatement) ast.Statement {
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 	if t != token.EOF {
-		msg := fmt.Sprintf("\033[1;31m%v\033[0m: no prefix parse functions for '%s' found", p.curToken.Pos, t)
+		msg := fmt.Sprintf("\033[1;31m%v\033[0m: no prefix parse functions for '%s' found.", p.curToken.Pos, t)
 		p.errors = append(p.errors, msg)
 		p.errorLines = append(p.errorLines, p.curToken.Pos.Sline())
 	}
@@ -3942,7 +3942,7 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 
 func (p *Parser) peekError(t token.TokenType) {
 	pos := p.fixPosCol()
-	msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be %s, got %s instead", pos, t, p.peekToken.Type)
+	msg := fmt.Sprintf("\033[1;31m%v\033[0m: expected next token to be %s, got %s instead.", pos, t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 	p.errorLines = append(p.errorLines, pos.Sline())
 }

@@ -69,8 +69,8 @@ dateObj.getDateInfo()
 //println(dateObj.OtherInfo1)
 
 //Below code will raise an execution error! Because OtherInfo2 is a WRITEONLY property.
-//dateObj.OtherInfo2 = "Other Date Info2"
-//println(dateObj.OtherInfo2)
+dateObj.OtherInfo2 = "Other Date Info2"
+println(dateObj.OtherInfo2)
 
 //Below code will raise an execution error! Because Day is a READONLY property.
 //dateObj.Day = 18

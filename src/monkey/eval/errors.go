@@ -212,9 +212,9 @@ func (e *Error) Inspect() string {
 		if colIdx >= len(sourceLine) {
 			colIdx = len(sourceLine)
 		}
-		prefix := strings.Repeat(" ", colIdx)
+		//prefix := strings.Repeat(" ", colIdx)
 		// Underline at least one char
-		underline = prefix + "\033[1;31m^\033[0m"
+		//underline = prefix + "\033[1;31m^\033[0m"
 		//}
 	} else {
 		// No identifier: use column-based underline
@@ -225,8 +225,8 @@ func (e *Error) Inspect() string {
 		if colIdx >= len(sourceLine) {
 			colIdx = len(sourceLine)
 		}
-		prefix := strings.Repeat(" ", colIdx)
-		underline = prefix + "\033[1;31m^\033[0m"
+		//prefix := strings.Repeat(" ", colIdx)
+		//underline = prefix + "\033[1;31m^\033[0m"
 	}
 
 	// Format output
