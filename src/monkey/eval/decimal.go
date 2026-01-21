@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const decimal_name = "decimal"
+const decimal_name = "monkey_decimal"
 
 func NewDecimalObj() *DecimalObj {
 	ret := &DecimalObj{}
@@ -824,8 +824,8 @@ func (d *DecimalObj) GetMarshalJSONWithoutQuotes(line string, args ...Object) Ob
 	return FALSE
 }
 
-//Implements sql's Scanner Interface.
-//So when calling sql.Rows.Scan(xxx), or sql.Row.Scan(xxx), we could pass this object to `Scan` method
+// Implements sql's Scanner Interface.
+// So when calling sql.Rows.Scan(xxx), or sql.Row.Scan(xxx), we could pass this object to `Scan` method
 func (d *DecimalObj) Scan(value interface{}) error {
 	if value == nil {
 		d.Valid = false
@@ -835,8 +835,8 @@ func (d *DecimalObj) Scan(value interface{}) error {
 	return d.Number.Scan(value)
 }
 
-//Implements driver's Valuer Interface.
-//So when calling sql.Exec(xx), we could pass this object to `Exec` method
+// Implements driver's Valuer Interface.
+// So when calling sql.Exec(xx), we could pass this object to `Exec` method
 func (d DecimalObj) Value() (driver.Value, error) {
 	if !d.Valid {
 		return nil, nil
@@ -844,7 +844,7 @@ func (d DecimalObj) Value() (driver.Value, error) {
 	return d.Number.Value()
 }
 
-//Json marshal handling
+// Json marshal handling
 func (d *DecimalObj) MarshalJSON() ([]byte, error) {
 	if !d.Valid {
 		return []byte("null"), nil
@@ -888,16 +888,15 @@ func (d *DecimalObj) UnmarshalJSON(b []byte) error {
 //
 // Example:
 //
-//     d1 := decimal.NewFromFloat(2).Div(decimal.NewFromFloat(3)
-//     d1.String() // output: "0.6666666666666667"
-//     d2 := decimal.NewFromFloat(2).Div(decimal.NewFromFloat(30000)
-//     d2.String() // output: "0.0000666666666667"
-//     d3 := decimal.NewFromFloat(20000).Div(decimal.NewFromFloat(3)
-//     d3.String() // output: "6666.6666666666666667"
-//     decimal.DivisionPrecision = 3
-//     d4 := decimal.NewFromFloat(2).Div(decimal.NewFromFloat(3)
-//     d4.String() // output: "0.667"
-//
+//	d1 := decimal.NewFromFloat(2).Div(decimal.NewFromFloat(3)
+//	d1.String() // output: "0.6666666666666667"
+//	d2 := decimal.NewFromFloat(2).Div(decimal.NewFromFloat(30000)
+//	d2.String() // output: "0.0000666666666667"
+//	d3 := decimal.NewFromFloat(20000).Div(decimal.NewFromFloat(3)
+//	d3.String() // output: "6666.6666666666666667"
+//	decimal.DivisionPrecision = 3
+//	d4 := decimal.NewFromFloat(2).Div(decimal.NewFromFloat(3)
+//	d4.String() // output: "0.667"
 var DivisionPrecision = 16
 
 // MarshalJSONWithoutQuotes should be set to true if you want the decimal to
@@ -947,9 +946,8 @@ func NewDec(value int64, exp int32) Decimal {
 //
 // Example:
 //
-//     d, err := NewFromString("-123.45")
-//     d2, err := NewFromString(".0001")
-//
+//	d, err := NewFromString("-123.45")
+//	d2, err := NewFromString(".0001")
 func NewFromString(value string) (Decimal, error) {
 	originalInput := value
 	var intString string
@@ -1005,8 +1003,8 @@ func NewFromString(value string) (Decimal, error) {
 //
 // Example:
 //
-//     NewFromFloat(123.45678901234567).String() // output: "123.4567890123456"
-//     NewFromFloat(.00000000000000001).String() // output: "0.00000000000000001"
+//	NewFromFloat(123.45678901234567).String() // output: "123.4567890123456"
+//	NewFromFloat(.00000000000000001).String() // output: "0.00000000000000001"
 //
 // NOTE: this will panic on NaN, +/-inf
 func NewFromFloat(value float64) Decimal {
@@ -1033,8 +1031,7 @@ func NewFromFloat(value float64) Decimal {
 //
 // Example:
 //
-//     NewFromFloatWithExponent(123.456, -2).String() // output: "123.46"
-//
+//	NewFromFloatWithExponent(123.456, -2).String() // output: "123.46"
 func NewFromFloatWithExponent(value float64, exp int32) Decimal {
 	mul := math.Pow(10, -float64(exp))
 	floatValue := value * mul
@@ -1067,7 +1064,7 @@ func NewFromUInt(value uint64) Decimal {
 //
 // Example:
 //
-// 	d := NewDec(12345, -4)
+//	d := NewDec(12345, -4)
 //	d2 := d.rescale(-1)
 //	d3 := d2.rescale(-4)
 //	println(d1)
@@ -1079,7 +1076,6 @@ func NewFromUInt(value uint64) Decimal {
 //	1.2345
 //	1.2
 //	1.2000
-//
 func (d Decimal) rescale(exp int32) Decimal {
 	d.ensureInitialized()
 	// NOTE(vadim): must convert exps to float64 before - to prevent overflow
@@ -1171,9 +1167,11 @@ func (d Decimal) Div(d2 Decimal) Decimal {
 
 // QuoRem does divsion with remainder
 // d.QuoRem(d2,precision) returns quotient q and remainder r such that
-//   d = d2 * q + r, q an integer multiple of 10^(-precision)
-//   0 <= r < abs(d2) * 10 ^(-precision) if d>=0
-//   0 >= r > -abs(d2) * 10 ^(-precision) if d<0
+//
+//	d = d2 * q + r, q an integer multiple of 10^(-precision)
+//	0 <= r < abs(d2) * 10 ^(-precision) if d>=0
+//	0 >= r > -abs(d2) * 10 ^(-precision) if d<0
+//
 // Note that precision<0 is allowed as input.
 func (d Decimal) QuoRem(d2 Decimal, precision int32) (Decimal, Decimal) {
 	d.ensureInitialized()
@@ -1216,8 +1214,10 @@ func (d Decimal) QuoRem(d2 Decimal, precision int32) (Decimal, Decimal) {
 
 // DivRound divides and rounds to a given precision
 // i.e. to an integer multiple of 10^(-precision)
-//   for a positive quotient digit 5 is rounded up, away from 0
-//   if the quotient is negative then digit 5 is rounded down, away from 0
+//
+//	for a positive quotient digit 5 is rounded up, away from 0
+//	if the quotient is negative then digit 5 is rounded down, away from 0
+//
 // Note that precision<0 is allowed as input.
 func (d Decimal) DivRound(d2 Decimal, precision int32) Decimal {
 	// QuoRem already checks initialization
@@ -1267,10 +1267,9 @@ func (d Decimal) Pow(d2 Decimal) Decimal {
 
 // Cmp compares the numbers represented by d and d2 and returns:
 //
-//     -1 if d <  d2
-//      0 if d == d2
-//     +1 if d >  d2
-//
+//	-1 if d <  d2
+//	 0 if d == d2
+//	+1 if d >  d2
 func (d Decimal) Cmp(d2 Decimal) int {
 	d.ensureInitialized()
 	d2.ensureInitialized()
@@ -1323,7 +1322,6 @@ func (d Decimal) LessThanOrEqual(d2 Decimal) bool {
 //	-1 if d <  0
 //	 0 if d == 0
 //	+1 if d >  0
-//
 func (d Decimal) Sign() int {
 	if d.value == nil {
 		return 0
@@ -1375,13 +1373,12 @@ func (d Decimal) Float64() (f float64, exact bool) {
 //
 // Example:
 //
-//     d := NewDec(-12345, -3)
-//     println(d.String())
+//	d := NewDec(-12345, -3)
+//	println(d.String())
 //
 // Output:
 //
-//     -12.345
-//
+//	-12.345
 func (d Decimal) String() string {
 	return d.string(true)
 }
@@ -1391,14 +1388,13 @@ func (d Decimal) String() string {
 //
 // Example:
 //
-// 	   NewFromFloat(0).StringFixed(2) // output: "0.00"
-// 	   NewFromFloat(0).StringFixed(0) // output: "0"
-// 	   NewFromFloat(5.45).StringFixed(0) // output: "5"
-// 	   NewFromFloat(5.45).StringFixed(1) // output: "5.5"
-// 	   NewFromFloat(5.45).StringFixed(2) // output: "5.45"
-// 	   NewFromFloat(5.45).StringFixed(3) // output: "5.450"
-// 	   NewFromFloat(545).StringFixed(-1) // output: "550"
-//
+//	NewFromFloat(0).StringFixed(2) // output: "0.00"
+//	NewFromFloat(0).StringFixed(0) // output: "0"
+//	NewFromFloat(5.45).StringFixed(0) // output: "5"
+//	NewFromFloat(5.45).StringFixed(1) // output: "5.5"
+//	NewFromFloat(5.45).StringFixed(2) // output: "5.45"
+//	NewFromFloat(5.45).StringFixed(3) // output: "5.450"
+//	NewFromFloat(545).StringFixed(-1) // output: "550"
 func (d Decimal) StringFixed(places int32) string {
 	rounded := d.Round(places)
 	return rounded.string(false)
@@ -1409,9 +1405,8 @@ func (d Decimal) StringFixed(places int32) string {
 //
 // Example:
 //
-// 	   NewFromFloat(5.45).Round(1).String() // output: "5.5"
-// 	   NewFromFloat(545).Round(-1).String() // output: "550"
-//
+//	NewFromFloat(5.45).Round(1).String() // output: "5.5"
+//	NewFromFloat(545).Round(-1).String() // output: "550"
 func (d Decimal) Round(places int32) Decimal {
 	// truncate to places + 1
 	ret := d.rescale(-places - 1)
@@ -1476,8 +1471,7 @@ func (d Decimal) Ceil() Decimal {
 //
 // Example:
 //
-//     decimal.NewFromString("123.456").Truncate(2).String() // "123.45"
-//
+//	decimal.NewFromString("123.456").Truncate(2).String() // "123.45"
 func (d Decimal) Truncate(precision int32) Decimal {
 	d.ensureInitialized()
 	if precision >= 0 && -precision > d.exp {
@@ -1613,7 +1607,7 @@ func (d *Decimal) ensureInitialized() {
 //
 // To call this function with an array, you must do:
 //
-//     Min(arr[0], arr[1:]...)
+//	Min(arr[0], arr[1:]...)
 //
 // This makes it harder to accidentally call Min with 0 arguments.
 func Min(first Decimal, rest ...Decimal) Decimal {
@@ -1630,7 +1624,7 @@ func Min(first Decimal, rest ...Decimal) Decimal {
 //
 // To call this function with an array, you must do:
 //
-//     Max(arr[0], arr[1:]...)
+//	Max(arr[0], arr[1:]...)
 //
 // This makes it harder to accidentally call Max with 0 arguments.
 func Max(first Decimal, rest ...Decimal) Decimal {

@@ -10,7 +10,7 @@ import (
 
 const (
 	TEMPLATE_OBJ  = "TEMPLATE_OBJ"
-	template_name = "template"
+	template_name = "monkey_template"
 	T_TEXT        = 0
 	T_HTML        = 1
 )

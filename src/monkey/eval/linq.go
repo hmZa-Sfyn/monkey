@@ -225,7 +225,7 @@ type OrderedQuery struct {
 	orders   []order
 }
 
-const linq_name = "linq"
+const linq_name = "monkey_linq"
 
 func NewLinqObj() *LinqObj {
 	ret := &LinqObj{}

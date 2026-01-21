@@ -24,7 +24,7 @@ const (
 )
 
 // HTTP Object
-const http_name = "http"
+const http_name = "monkey_http"
 
 type HttpObj struct {
 }

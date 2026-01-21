@@ -406,7 +406,7 @@ func (re *RegEx) UnmarshalJSON(b []byte) error {
 /* REGEXP OBJECT */
 const (
 	REGEXP_OBJ  = "REGEXP_OBJ"
-	regexp_name = "regexp"
+	regexp_name = "monkey_regexp"
 )
 
 type RegExpObj struct {

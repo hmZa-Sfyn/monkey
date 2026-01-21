@@ -12,7 +12,7 @@ import (
 
 const (
 	JSON_OBJ  = "JSON_OBJ"
-	json_name = "json"
+	json_name = "monkey_json"
 )
 
 type Json struct {

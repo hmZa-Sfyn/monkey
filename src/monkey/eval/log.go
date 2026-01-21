@@ -6,7 +6,7 @@ import (
 
 const (
 	LOGGER_OBJ  = "LOGGER_OBJ"
-	logger_name = "logger"
+	logger_name = "monkey_logger"
 )
 
 func NewLoggerObj() Object {

@@ -7,7 +7,7 @@ import (
 
 const (
 	CSV_OBJ  = "CSV_OBJ"
-	csv_name = "csv"
+	csv_name = "monkey_csv"
 )
 
 var optionsKeyMap = map[string]bool{

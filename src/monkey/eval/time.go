@@ -39,7 +39,7 @@ var conversions = map[byte]string{
 	'%': "%",
 }
 
-const time_name = "time"
+const time_name = "monkey_time"
 
 type TimeObj struct {
 	Tm    time.Time

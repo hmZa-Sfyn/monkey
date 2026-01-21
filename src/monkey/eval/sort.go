@@ -16,7 +16,7 @@ const (
 
 const (
 	SORT_OBJ  = "SORT_OBJ"
-	sort_name = "sort"
+	sort_name = "monkey_sort"
 )
 
 func NewSortObj() Object {

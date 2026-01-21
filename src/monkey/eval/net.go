@@ -16,10 +16,10 @@ const (
 	UNIXLISTENER_OBJ = "UNIX_LISTENER_OBJ"
 )
 
-//Net Object
+// Net Object
 const (
 	NET_OBJ  = "NET_OBJ"
-	net_name = "net"
+	net_name = "monkey_net"
 )
 
 type NetObj struct{}
@@ -186,7 +186,7 @@ func (n *NetObj) SplitHostPort(line string, args ...Object) Object {
 	return arr
 }
 
-//TCP connection object
+// TCP connection object
 type TcpConnObject struct {
 	Conn    *net.TCPConn
 	Address string
@@ -234,7 +234,7 @@ func (t *TcpConnObject) CallMethod(line string, scope *Scope, method string, arg
 	}
 }
 
-//Return the remote address
+// Return the remote address
 func (t *TcpConnObject) Addr(line string, args ...Object) Object {
 	return NewString(t.Address)
 }
@@ -458,7 +458,7 @@ func (t *TcpConnObject) SetWriteBuffer(line string, args ...Object) Object {
 	return TRUE
 }
 
-//TCP Listener object
+// TCP Listener object
 type TCPListenerObject struct {
 	Listener *net.TCPListener
 	Address  string
@@ -532,7 +532,7 @@ func (l *TCPListenerObject) SetDeadline(line string, args ...Object) Object {
 	return TRUE
 }
 
-//UDP connection object
+// UDP connection object
 type UdpConnObject struct {
 	Conn    *net.UDPConn
 	Address string
@@ -570,7 +570,7 @@ func (u *UdpConnObject) CallMethod(line string, scope *Scope, method string, arg
 	}
 }
 
-//Return the remote address
+// Return the remote address
 func (u *UdpConnObject) Addr(line string, args ...Object) Object {
 	return NewString(u.Address)
 }
@@ -704,7 +704,7 @@ func (u *UdpConnObject) SetWriteBuffer(line string, args ...Object) Object {
 	return TRUE
 }
 
-//UNIX connection object
+// UNIX connection object
 type UnixConnObject struct {
 	Conn    *net.UnixConn
 	Address string
@@ -746,7 +746,7 @@ func (u *UnixConnObject) CallMethod(line string, scope *Scope, method string, ar
 	}
 }
 
-//Return the remote address
+// Return the remote address
 func (u *UnixConnObject) Addr(line string, args ...Object) Object {
 	return NewString(u.Address)
 }
@@ -906,7 +906,7 @@ func (u *UnixConnObject) SetWriteBuffer(line string, args ...Object) Object {
 	return TRUE
 }
 
-//UNIX Listener object
+// UNIX Listener object
 type UnixListenerObject struct {
 	Listener *net.UnixListener
 	Address  string

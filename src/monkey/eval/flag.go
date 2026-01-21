@@ -14,7 +14,7 @@ func NewFlagObj() *FlagObj {
 
 const (
 	FLAG_OBJ  = "FLAG_OBJ"
-	flag_name = "flag"
+	flag_name = "monkey_flag"
 )
 
 type FlagObj struct {

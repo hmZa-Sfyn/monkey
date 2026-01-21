@@ -3,6 +3,7 @@ package eval
 import (
 	"database/sql"
 	_ "fmt"
+
 	//	_ "github.com/mattn/go-sqlite3"
 	_ "reflect"
 )
@@ -20,10 +21,10 @@ const (
 
 const (
 	SQL_OBJ  = "SQL_OBJ"
-	sql_name = "sql"
+	sql_name = "monkey_sql"
 )
 
-//This object's purpose is only for 5 predefined null constants
+// This object's purpose is only for 5 predefined null constants
 type SqlsObject struct {
 }
 
@@ -51,9 +52,11 @@ func NewSqlsObject() Object {
 	return ret
 }
 
-//***************************************************************
-//                         SQL Object
-//***************************************************************
+// ***************************************************************
+//
+//	SQL Object
+//
+// ***************************************************************
 type SqlObject struct {
 	Db   *sql.DB
 	Name string
@@ -91,7 +94,7 @@ func (s *SqlObject) CallMethod(line string, scope *Scope, method string, args ..
 	}
 }
 
-//Return the remote address
+// Return the remote address
 func (s *SqlObject) Ping(line string, args ...Object) Object {
 	if len(args) != 0 {
 		return NewError(line, ARGUMENTERROR, "0", len(args))
@@ -251,9 +254,11 @@ func (s *SqlObject) Begin(line string, args ...Object) Object {
 	return &DbTxObject{Tx: tx, Name: s.Name}
 }
 
-//***************************************************************
-//                         DB Result Object
-//***************************************************************
+// ***************************************************************
+//
+//	DB Result Object
+//
+// ***************************************************************
 type DbResultObject struct {
 	Result sql.Result
 	Name   string
@@ -288,9 +293,11 @@ func (r *DbResultObject) RowsAffected(line string, args ...Object) Object {
 	return NewInteger(n)
 }
 
-//***************************************************************
-//                         DB Rows Object
-//***************************************************************
+// ***************************************************************
+//
+//	DB Rows Object
+//
+// ***************************************************************
 type DbRowsObject struct {
 	Rows *sql.Rows
 	Name string
@@ -380,9 +387,11 @@ func (r *DbRowsObject) Err(line string, args ...Object) Object {
 	return NewString("")
 }
 
-//***************************************************************
-//                         DB Row Object
-//***************************************************************
+// ***************************************************************
+//
+//	DB Row Object
+//
+// ***************************************************************
 type DbRowObject struct {
 	Row  *sql.Row
 	Name string
@@ -403,9 +412,11 @@ func (r *DbRowObject) Scan(line string, args ...Object) Object {
 	return scan(r.Row, line, args...)
 }
 
-//***************************************************************
-//                         DB Statement Object
-//***************************************************************
+// ***************************************************************
+//
+//	DB Statement Object
+//
+// ***************************************************************
 type DbStmtObject struct {
 	Stmt *sql.Stmt
 	Name string
@@ -493,9 +504,11 @@ func (s *DbStmtObject) QueryRow(line string, args ...Object) Object {
 	return &DbRowObject{Row: row, Name: s.Name}
 }
 
-//***************************************************************
-//                         DB Transaction object
-//***************************************************************
+// ***************************************************************
+//
+//	DB Transaction object
+//
+// ***************************************************************
 type DbTxObject struct {
 	Tx   *sql.Tx
 	Name string
@@ -710,7 +723,7 @@ func (t *DbTxObject) Rollback(line string, args ...Object) Object {
 //	return params
 //}
 
-//Handling `Exec`'s parameters, mainly for handling `null`
+// Handling `Exec`'s parameters, mainly for handling `null`
 func handleExecParams(args []Object) []interface{} {
 
 	var params []interface{}

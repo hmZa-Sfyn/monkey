@@ -6,7 +6,7 @@ import (
 
 const (
 	OPTIONAL_OBJ  = "OPTIONAL_OBJ"
-	optional_name = "optional"
+	optional_name = "monkey_optional"
 )
 
 type Optional struct {

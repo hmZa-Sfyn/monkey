@@ -10,7 +10,7 @@ import (
 
 const (
 	IOUTIL_OBJ  = "IOUTIL_OBJ"
-	ioutil_name = "ioutil"
+	ioutil_name = "monkey_ioutil"
 )
 
 type IOUtilObj struct{}
@@ -184,7 +184,7 @@ type FileObject struct {
 	writer  *bufio.Writer
 }
 
-//Implement the 'Closeable' interface
+// Implement the 'Closeable' interface
 func (f *FileObject) close(line string, args ...Object) Object {
 	return f.Close(line, args...)
 }
@@ -238,10 +238,10 @@ func (f *FileObject) Close(line string, args ...Object) Object {
 	return TRUE
 }
 
-//Note: This method will return three different values:
-//   1. nil    - with error message    (ERROR)
-//   2. nil    - without error message (EOF)
-//   3. string - read string
+// Note: This method will return three different values:
+//  1. nil    - with error message    (ERROR)
+//  2. nil    - without error message (EOF)
+//  3. string - read string
 func (f *FileObject) Read(line string, args ...Object) Object {
 	if len(args) != 1 {
 		return NewError(line, ARGUMENTERROR, "1", len(args))

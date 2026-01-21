@@ -9,7 +9,7 @@ import (
 
 const (
 	MATH_OBJ  = "MATH_OBJ"
-	math_name = "math"
+	math_name = "monkey_math"
 )
 
 type Math struct{}

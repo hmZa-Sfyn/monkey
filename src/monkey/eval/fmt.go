@@ -14,7 +14,7 @@ func NewFmtObj() *FmtObj {
 
 const (
 	FMT_OBJ  = "FMT_OBJ"
-	fmt_name = "fmt"
+	fmt_name = "monkey_fmt"
 )
 
 type FmtObj struct {

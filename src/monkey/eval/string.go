@@ -863,7 +863,7 @@ func (s String) Value() (driver.Value, error) {
 
 const (
 	STRINGS_OBJ  = "STRINGS_OBJ"
-	strings_name = "strings"
+	strings_name = "monkey_strings"
 )
 
 func NewStringsObj() Object {

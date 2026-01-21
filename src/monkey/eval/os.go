@@ -11,7 +11,7 @@ import (
 
 const (
 	OS_OBJ  = "OS_OBJ"
-	os_name = "os"
+	os_name = "monkey_os"
 )
 
 type Os struct{}

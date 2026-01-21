@@ -31,7 +31,7 @@ func NewUnicodeObj() *UnicodeObj {
 
 const (
 	UNICODE_OBJ  = "UNICODE_OBJ"
-	unicode_name = "unicode"
+	unicode_name = "monkey_unicode"
 )
 
 type UnicodeObj struct {
