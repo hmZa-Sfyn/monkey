@@ -35,7 +35,7 @@ class pyint {
     }
 
     fn -(other) {
-        if other.is_a(pyint) {
+        if type(other) == type(new pyint(2)) {
             th = this.pynum
             ot = other.pynum
             return new pyint(`python3 -c "print($th - $ot)"`)
@@ -48,7 +48,7 @@ class pyint {
     }
     
     fn *(other) {
-        if other.is_a(pyint) {
+        if type(other) == type(new pyint(2)) {
             th = this.pynum
             ot = other.pynum
             return new pyint(`python3 -c "print($th * $ot)"`)
@@ -61,7 +61,7 @@ class pyint {
     }
 
     fn /(other) {
-        if other.is_a(pyint) {
+        if type(other) == type(new pyint(2)) {
             th = this.pynum
             ot = other.pynum
             return new pyint(`python3 -c "print($th // $ot)"`)
@@ -84,7 +84,7 @@ class pyint {
     }
 
     fn %(other) {
-        if other.is_a(pyint) {
+        if type(other) == type(new pyint(2)) {
             th = this.pynum
             ot = other.pynum
             return new pyint(`python3 -c "print($th % $ot)"`)
