@@ -80,7 +80,7 @@ func (o *Optional) Of(line string, args ...Object) Object {
 	}
 
 	if args[0] == NIL {
-		return NewError(line, GENERICERROR, "of()'s parameter value must not be nil.")
+		return NewError(line, GENERICERROR, line, "of()'s parameter value must not be nil.")
 	}
 
 	//returns a new Optional
@@ -106,7 +106,7 @@ func (o *Optional) Get(line string, args ...Object) Object {
 	}
 
 	if o.Value == NIL {
-		return NewError(line, GENERICERROR, "Option's value not present.")
+		return NewError(line, GENERICERROR, line, "Option's value not present.")
 	}
 	return o.Value
 }
@@ -142,7 +142,7 @@ func (o *Optional) Or(line string, scope *Scope, args ...Object) Object {
 	s := NewScope(scope, nil)
 	opt := Eval(supplier.Literal.Body, s) // run the function
 	if opt.Type() != OPTIONAL_OBJ {       // the supplier function must return an Optional
-		return NewError(line, GENERICERROR, "The supplier function must return an optional.")
+		return NewError(line, GENERICERROR, line, "The supplier function must return an optional.")
 	}
 	return opt
 }
@@ -338,7 +338,7 @@ func (o *Optional) FlatMap(line string, scope *Scope, args ...Object) Object {
 	}
 
 	if r.Type() != OPTIONAL_OBJ {
-		return NewError(line, GENERICERROR, "flatmap() function's return value not an optional.")
+		return NewError(line, GENERICERROR, line, "flatmap() function's return value not an optional.")
 	}
 	return r
 }

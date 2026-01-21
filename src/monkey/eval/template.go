@@ -139,7 +139,7 @@ func (t *TemplateObj) New(line string, args ...Object) Object {
 
 	tmplType := intObj.Int64
 	if tmplType != T_TEXT && tmplType != T_HTML {
-		return NewError(line, GENERICERROR, "First parameter of new() should be 0(text)|1(html).")
+		return NewError(line, GENERICERROR, line, "First parameter of new() should be 0(text)|1(html).")
 	}
 
 	var name string = ""
@@ -239,7 +239,7 @@ func (t *TemplateObj) ParseFiles(line string, args ...Object) Object {
 
 	tmplType := intObj.Int64
 	if tmplType != T_TEXT && tmplType != T_HTML {
-		return NewError(line, GENERICERROR, "First parameter of parseFiles() should be 0(text)|1(html).")
+		return NewError(line, GENERICERROR, line, "First parameter of parseFiles() should be 0(text)|1(html).")
 	}
 
 	strObj, ok := args[1].(*String)
@@ -688,11 +688,11 @@ func (t *TemplateObj) Funcs(line string, scope *Scope, args ...Object) Object {
 	funcMaps := make(map[string]interface{})
 	for _, pair := range hashObj.Pairs {
 		if pair.Key.Type() != STRING_OBJ {
-			return NewError(line, GENERICERROR, "Hash's key type should be 'STRING', got '"+pair.Key.Type()+"'")
+			return NewError(line, GENERICERROR, line, "Hash's key type should be 'STRING', got '"+pair.Key.Type()+"'")
 		}
 
 		if pair.Value.Type() != FUNCTION_OBJ {
-			return NewError(line, GENERICERROR, "Hash's value type should be 'FUNCTION', got '"+pair.Value.Type()+"'")
+			return NewError(line, GENERICERROR, line, "Hash's value type should be 'FUNCTION', got '"+pair.Value.Type()+"'")
 		}
 
 		key := pair.Key.(*String).String

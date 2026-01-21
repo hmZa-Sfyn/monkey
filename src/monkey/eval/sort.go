@@ -85,7 +85,7 @@ func (s *SortObj) SortFloats(line string, args ...Object) Object {
 	for _, v := range floatArr.Members {
 		_, ok := v.(Number)
 		if !ok {
-			return NewError(line, GENERICERROR, "Not all data are numbers")
+			return NewError(line, GENERICERROR, line, "Not all data are numbers")
 		}
 
 		var f float64
@@ -123,7 +123,7 @@ func (s *SortObj) FloatsAreSorted(line string, args ...Object) Object {
 	for _, v := range floatArr.Members {
 		_, ok := v.(Number)
 		if !ok {
-			return NewError(line, GENERICERROR, "Not all data are numbers")
+			return NewError(line, GENERICERROR, line, "Not all data are numbers")
 		}
 
 		var f float64
@@ -181,7 +181,7 @@ func (s *SortObj) SortInts(line string, args ...Object) Object {
 	var sortArr []int64
 	for _, v := range IntsArr.Members {
 		if v.Type() != INTEGER_OBJ {
-			return NewError(line, GENERICERROR, "Not all data are ints")
+			return NewError(line, GENERICERROR, line, "Not all data are ints")
 		}
 
 		i := v.(*Integer).Int64
@@ -211,7 +211,7 @@ func (s *SortObj) IntsAreSorted(line string, args ...Object) Object {
 	var sortArr []int64
 	for _, v := range intArr.Members {
 		if v.Type() != INTEGER_OBJ {
-			return NewError(line, GENERICERROR, "Not all data are ints")
+			return NewError(line, GENERICERROR, line, "Not all data are ints")
 		}
 
 		i := v.(*Integer).Int64
@@ -262,7 +262,7 @@ func (s *SortObj) SortUInts(line string, args ...Object) Object {
 	var sortArr []uint64
 	for _, v := range UIntsArr.Members {
 		if v.Type() != UINTEGER_OBJ {
-			return NewError(line, GENERICERROR, "Not all data are uints")
+			return NewError(line, GENERICERROR, line, "Not all data are uints")
 		}
 
 		i := v.(*UInteger).UInt64
@@ -292,7 +292,7 @@ func (s *SortObj) UIntsAreSorted(line string, args ...Object) Object {
 	var sortArr []uint64
 	for _, v := range uintArr.Members {
 		if v.Type() != UINTEGER_OBJ {
-			return NewError(line, GENERICERROR, "Not all data are uints")
+			return NewError(line, GENERICERROR, line, "Not all data are uints")
 		}
 
 		i := v.(*UInteger).UInt64
@@ -343,7 +343,7 @@ func (s *SortObj) SortStrings(line string, args ...Object) Object {
 	var sortArr []string
 	for _, v := range stringsArr.Members {
 		if v.Type() != STRING_OBJ {
-			return NewError(line, GENERICERROR, "Not all data are strings")
+			return NewError(line, GENERICERROR, line, "Not all data are strings")
 		}
 
 		sortArr = append(sortArr, v.(*String).String)
@@ -372,7 +372,7 @@ func (s *SortObj) StringsAreSorted(line string, args ...Object) Object {
 	var sortArr []string
 	for _, v := range stringArr.Members {
 		if v.Type() != STRING_OBJ {
-			return NewError(line, GENERICERROR, "Not all data are strings")
+			return NewError(line, GENERICERROR, line, "Not all data are strings")
 		}
 
 		s := v.(*String).String

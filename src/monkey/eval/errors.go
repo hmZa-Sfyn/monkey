@@ -68,6 +68,7 @@ const (
 	NAMENOTEXPORTED
 	IMPORTERROR
 	GENERICERROR
+	BUILTINERROR
 )
 
 var errorType = map[int]string{
@@ -126,11 +127,14 @@ var errorType = map[int]string{
 	DIAMONDOPERERROR:    "\x1b[31mdiamond operator must be followed by a file object\x1b[0m, got \x1b[36m'%s'\x1b[0m",
 	NAMENOTEXPORTED:     "\x1b[31munexported name not accessible\x1b[0m — \x1b[36m%s.%s\x1b[0m is not exported",
 	IMPORTERROR:         "\x1b[31mimport failed\x1b[0m: \x1b[36m%s\x1b[0m",
-	GENERICERROR:        "\x1b[31m%s\x1b[0m",
+	GENERICERROR:        "\x1b[31m%s: %s\x1b[0m",
+
+	BUILTINERROR: "\x1b[31mbuiltin error\x1b[0m: \x1b[36m%s\x1b[0m",
 }
 
 func NewError(line string, t int, args ...interface{}) Object {
 	msg := fmt.Sprintf(errorType[t], args...)
+
 	return &Error{Kind: t, Message: msg, PosMarker: line}
 }
 
@@ -164,7 +168,7 @@ func (e *Error) Inspect() string {
 	rePos := regexp.MustCompile(`<(/[^:>]+):(\d+)(?::(\d+))?>`)
 	matches := rePos.FindStringSubmatch(e.PosMarker)
 	if matches == nil {
-		sb.WriteString("\033[1;31merror:\033[0m ")
+		sb.WriteString("\033[1;31m\033[0m ")
 		sb.WriteString(e.Message)
 		sb.WriteString("\n")
 		return sb.String()
@@ -196,51 +200,54 @@ func (e *Error) Inspect() string {
 
 	var underline string
 
+	safeRepeat := func(n int) string {
+		if n < 0 {
+			return ""
+		}
+		return strings.Repeat(" ", n)
+	}
+
 	if identifier != "" && sourceLine != "" {
-		// Find the identifier in the source line
-		/*if idx := strings.Index(sourceLine, identifier); idx != -1 {
-			// Build underline exactly under the identifier
-			prefix := strings.Repeat(" ", idx)
+		if idx := strings.Index(sourceLine, identifier); idx != -1 {
+			prefix := safeRepeat(idx)
 			mark := strings.Repeat("^", len(identifier))
 			underline = prefix + "\033[1;31m" + mark + "\033[0m"
-		} else {*/
-		// Identifier not found in source — fall back to column
+		} else {
+			// Fallback to column number
+			colIdx := colNum - 1 // to 0-based
+			if colIdx < 0 {
+				colIdx = 0
+			}
+			if colIdx > len(sourceLine) {
+				colIdx = len(sourceLine)
+			}
+			prefix := safeRepeat(colIdx)
+			underline = prefix + "\033[1;31m^\033[0m"
+		}
+	} else {
+		// No identifier or no source line: use column-based
 		colIdx := colNum - 1 // to 0-based
 		if colIdx < 0 {
 			colIdx = 0
 		}
-		if colIdx >= len(sourceLine) {
+		if colIdx > len(sourceLine) {
 			colIdx = len(sourceLine)
 		}
-		//prefix := strings.Repeat(" ", colIdx)
-		// Underline at least one char
-		//underline = prefix + "\033[1;31m^\033[0m"
-		//}
-	} else {
-		// No identifier: use column-based underline
-		colIdx := colNum - 1 // 0-based
-		if colIdx < 0 {
-			colIdx = 0
-		}
-		if colIdx >= len(sourceLine) {
-			colIdx = len(sourceLine)
-		}
-		//prefix := strings.Repeat(" ", colIdx)
-		//underline = prefix + "\033[1;31m^\033[0m"
+		prefix := safeRepeat(colIdx - 2)
+		underline = prefix + "\033[1;31m^\033[0m"
 	}
-
 	// Format output
-	sb.WriteString(fmt.Sprintf("\033[1;90m-->\033[0m \033[1m%s:%d\033[0m\n", filePath, lineNum))
-	sb.WriteString("\033[1;90m |\033[0m\n")
+	sb.WriteString(fmt.Sprintf("\033[1;90m---+--> (\033[0m\033[1m%s:%d\033[0m\033[1;90m)\033[0m\n", filePath, lineNum))
+	sb.WriteString("\033[1;90m   |\033[0m\n")
 
 	lineNumStr := strconv.Itoa(lineNum)
-	sb.WriteString(fmt.Sprintf("\033[1;37m%2s\033[0m\033[1;90m\033[0m \033[90m%s\033[0m\n", lineNumStr, sourceLine))
+	sb.WriteString(fmt.Sprintf("\033[1;37m%2s \033[0m\033[1;90m|\033[0m \033[90m%s\033[0m\n", lineNumStr, sourceLine))
 
 	if underline != "" {
-		sb.WriteString(fmt.Sprintf("\033[1;90m |\033[0m   %s\n", underline))
+		sb.WriteString(fmt.Sprintf("\033[1;90m   |\033[0m %s\n", underline))
 	}
 
-	sb.WriteString("\033[1;90m |\033[0m\n")
+	sb.WriteString("\033[1;90m   |\033[0m\n")
 	sb.WriteString(fmt.Sprintf("\033[1;31merror:\033[0m %s\n", e.Message))
 
 	return sb.String()

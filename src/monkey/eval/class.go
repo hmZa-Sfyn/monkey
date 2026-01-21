@@ -254,7 +254,7 @@ func initRootObject() bool {
 					return nativeBoolToBooleanObject(InstanceOf(class.Name, self))
 				}
 
-				return NewError(line, GENERICERROR, "is_a/instanceOf expected a class or string for its argument")
+				return NewError(line, GENERICERROR, line, "is_a/instanceOf expected a class or string for its argument")
 			},
 		},
 		"classOf": &BuiltinMethod{

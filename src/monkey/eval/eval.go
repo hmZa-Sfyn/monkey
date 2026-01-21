@@ -423,7 +423,7 @@ func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 			}
 
 		default:
-			return NewError(l.Pos().Sline(), GENERICERROR, "Only Array|Tuple|Hash is allowed!")
+			return NewError(l.Pos().Sline(), GENERICERROR, l.Pos().Sline(), "Only Array|Tuple|Hash is allowed!")
 		}
 
 		return
@@ -982,7 +982,7 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 		}
 
 		if aObj.Type() == ENUM_OBJ { //it's enum type
-			return NewError(a.Pos().Sline(), GENERICERROR, "Enum value cannot be reassigned!")
+			return NewError(a.Pos().Sline(), GENERICERROR, a.Pos().Sline(), "Enum value cannot be reassigned!")
 		} else if aObj.Type() == HASH_OBJ { //e.g. hash.key = value
 			return evalHashAssignExpression(a, strArr[0], aObj, scope, val)
 		} else if aObj.Type() == INSTANCE_OBJ { //e.g. this.var = xxxx
@@ -1770,7 +1770,7 @@ func evalMetaOperatorInfixExpression(p *ast.InfixExpression, left Object, right 
 	rightNumLen := len(rightMembers)
 
 	if leftNumLen != rightNumLen {
-		return NewError(p.Pos().Sline(), GENERICERROR, "Number of items not equal for Meta-Operators!")
+		return NewError(p.Pos().Sline(), GENERICERROR, p.Pos().Sline(), "Number of items not equal for Meta-Operators!")
 	}
 
 	resultArr := &Array{}
@@ -4319,7 +4319,7 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 
 			isStatic := instanceObj.IsStatic(fname, ClassMethodKind)
 			if isStatic {
-				return NewError(call.Call.Pos().Sline(), GENERICERROR, "Method is static!")
+				return NewError(call.Call.Pos().Sline(), GENERICERROR, call.Call.Pos().Sline(), "Method is static!")
 			}
 
 			method := instanceObj.GetMethod(fname)
@@ -5290,7 +5290,7 @@ func evalFunctionDirect(fn Object, args []Object, instance *ObjectInstance, scop
 	case *Function:
 		fn.Instance = instance
 		//		if len(args) < len(fn.Literal.Parameters) {
-		//			return NewError("", GENERICERROR, "Not enough parameters to call function")
+		//			return NewError("", GENERICERROR, line, "Not enough parameters to call function")
 		//		}
 
 		newScope := NewScope(scope, nil)

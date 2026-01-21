@@ -197,7 +197,7 @@ func (c *CsvObj) SetOptions(line string, args ...Object) Object {
 
 		//check key name
 		if _, ok := optionsKeyMap[key.String]; !ok {
-			return NewError(line, GENERICERROR, "Keys should be:	Comma|Comment|FieldsPerRecord|LazyQuotes|TrimLeadingSpace|ReuseRecord")
+			return NewError(line, GENERICERROR, line, "Keys should be:	Comma|Comment|FieldsPerRecord|LazyQuotes|TrimLeadingSpace|ReuseRecord")
 		}
 
 		//check value type
@@ -205,7 +205,7 @@ func (c *CsvObj) SetOptions(line string, args ...Object) Object {
 		case "Comma":
 			value, ok := option.Value.(*String)
 			if !ok {
-				return NewError(line, GENERICERROR, "'Comma' key's value should be a String")
+				return NewError(line, GENERICERROR, line, "'Comma' key's value should be a String")
 			}
 			if c.Reader != nil {
 				c.Reader.Comma = rune(value.String[0])
@@ -215,7 +215,7 @@ func (c *CsvObj) SetOptions(line string, args ...Object) Object {
 		case "Comment":
 			value, ok := option.Value.(*String)
 			if !ok {
-				return NewError(line, GENERICERROR, "'Comment' key's value should be a String")
+				return NewError(line, GENERICERROR, line, "'Comment' key's value should be a String")
 			}
 			if c.Reader != nil {
 				c.Reader.Comment = rune(value.String[0])
@@ -223,7 +223,7 @@ func (c *CsvObj) SetOptions(line string, args ...Object) Object {
 		case "FieldsPerRecord":
 			value, ok := option.Value.(*Integer)
 			if !ok {
-				return NewError(line, GENERICERROR, "'FieldsPerRecord' key's value should be an Integer")
+				return NewError(line, GENERICERROR, line, "'FieldsPerRecord' key's value should be an Integer")
 			}
 			if c.Reader != nil {
 				c.Reader.FieldsPerRecord = int(value.Int64)
@@ -231,7 +231,7 @@ func (c *CsvObj) SetOptions(line string, args ...Object) Object {
 		case "LazyQuotes":
 			value, ok := option.Value.(*Boolean)
 			if !ok {
-				return NewError(line, GENERICERROR, "'LazyQuotes' key's value should be a Boolean")
+				return NewError(line, GENERICERROR, line, "'LazyQuotes' key's value should be a Boolean")
 			}
 			if c.Reader != nil {
 				c.Reader.LazyQuotes = value.Bool
@@ -239,7 +239,7 @@ func (c *CsvObj) SetOptions(line string, args ...Object) Object {
 		case "TrimLeadingSpace":
 			value, ok := option.Value.(*Boolean)
 			if !ok {
-				return NewError(line, GENERICERROR, "'TrimLeadingSpace' key's value should be a Boolean")
+				return NewError(line, GENERICERROR, line, "'TrimLeadingSpace' key's value should be a Boolean")
 			}
 			if c.Reader != nil {
 				c.Reader.TrimLeadingSpace = value.Bool
@@ -247,7 +247,7 @@ func (c *CsvObj) SetOptions(line string, args ...Object) Object {
 		case "ReuseRecord":
 			value, ok := option.Value.(*Boolean)
 			if !ok {
-				return NewError(line, GENERICERROR, "'ReuseRecord' key's value should be a Boolean")
+				return NewError(line, GENERICERROR, line, "'ReuseRecord' key's value should be a Boolean")
 			}
 			if c.Reader != nil {
 				c.Reader.ReuseRecord = value.Bool
@@ -255,7 +255,7 @@ func (c *CsvObj) SetOptions(line string, args ...Object) Object {
 		case "UseCRLF":
 			value, ok := option.Value.(*Boolean)
 			if !ok {
-				return NewError(line, GENERICERROR, "'UseCRLF' key's value should be a Boolean")
+				return NewError(line, GENERICERROR, line, "'UseCRLF' key's value should be a Boolean")
 			}
 			if c.Writer != nil {
 				c.Writer.UseCRLF = value.Bool

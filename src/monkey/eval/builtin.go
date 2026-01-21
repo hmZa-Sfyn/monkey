@@ -96,7 +96,7 @@ func rangeBuiltin() *Builtin {
 				}
 
 				if jValue <= 0 {
-					return NewError(line, GENERICERROR, "second parameter of 'range' should be >=0")
+					return NewError(line, GENERICERROR,  line, "second parameter of 'range' should be >=0")
 				}
 			}
 
@@ -484,7 +484,7 @@ func hashBuiltin() *Builtin {
 						//hash.Pairs[hashable.HashKey()] = HashPair{Key: newMembers[i], Value: newMembers[i+1]}
 						i = i + 2
 					} else {
-						return NewError(line, GENERICERROR, fmt.Sprintf("%d index is not hashable", i))
+						return NewError(line, GENERICERROR,  line, fmt.Sprintf("%d index is not hashable", i))
 					}
 				}
 
@@ -510,7 +510,7 @@ func hashBuiltin() *Builtin {
 						//hash.Pairs[hashable.HashKey()] = HashPair{Key: newMembers[i], Value: newMembers[i+1]}
 						i = i + 2
 					} else {
-						return NewError(line, GENERICERROR, fmt.Sprintf("%d index is not hashable", i))
+						return NewError(line, GENERICERROR,  line, fmt.Sprintf("%d index is not hashable", i))
 					}
 				}
 
@@ -945,7 +945,7 @@ func newArrayBuiltin() *Builtin {
 			}
 
 			if count < 0 {
-				return NewError(line, GENERICERROR, "Parameter of 'newArry' is less than zero.")
+				return NewError(line, GENERICERROR,  line, "Parameter of 'newArry' is less than zero.")
 			}
 
 			remainingArgs := args[1:]
@@ -1484,7 +1484,7 @@ func instanceOfBuiltin() *Builtin {
 				return nativeBoolToBooleanObject(InstanceOf(class.Name, instance))
 			}
 
-			return NewError(line, GENERICERROR, "is_a/instanceOf expected a class or string for second argument")
+			return NewError(line, GENERICERROR,  line, "is_a/instanceOf expected a class or string for second argument")
 		},
 	}
 }

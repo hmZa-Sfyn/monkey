@@ -410,7 +410,7 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 	switch obj.Type() {
 	case FILE_OBJ:
 		if len(args) != 1 && len(args) != 2 && len(args) != 3 {
-			return NewError(line, GENERICERROR, "File object should have 1|2|3 parameter(s):from(file, [field-separator], [selector])")
+			return NewError(line, GENERICERROR, line, "File object should have 1|2|3 parameter(s):from(file, [field-separator], [selector])")
 		}
 
 		var fsStr string = "," //field separator(default is ",")
@@ -1532,7 +1532,7 @@ func (lq *LinqObj) SelectMany(line string, scope *Scope, args ...Object) Object 
 						}
 
 						if lq.Type() != LINQ_OBJ {
-							panic(NewError(line, GENERICERROR, "Function should return a *LinqObj"))
+							panic(NewError(line, GENERICERROR, line, "Function should return a *LinqObj"))
 						}
 
 						innernext = lq.(*LinqObj).Query.Iterate()
@@ -1594,7 +1594,7 @@ func (lq *LinqObj) SelectManyIndexed(line string, scope *Scope, args ...Object) 
 							lq = obj.Value
 						}
 						if lq.Type() != LINQ_OBJ {
-							panic(NewError(line, GENERICERROR, "Function should return a *LinqObj"))
+							panic(NewError(line, GENERICERROR, line, "Function should return a *LinqObj"))
 						}
 						innernext = lq.(*LinqObj).Query.Iterate()
 						index++
@@ -1653,7 +1653,7 @@ func (lq *LinqObj) SelectManyBy(line string, scope *Scope, args ...Object) Objec
 							lq = obj.Value
 						}
 						if lq.Type() != LINQ_OBJ {
-							panic(NewError(line, GENERICERROR, "Function should return a *LinqObj"))
+							panic(NewError(line, GENERICERROR, line, "Function should return a *LinqObj"))
 						}
 						innernext = lq.(*LinqObj).Query.Iterate()
 					}
@@ -1720,7 +1720,7 @@ func (lq *LinqObj) SelectManyByIndexed(line string, scope *Scope, args ...Object
 							item = obj.Value
 						}
 						if item.Type() != LINQ_OBJ {
-							panic(NewError(line, GENERICERROR, "Function should return a *LinqObj"))
+							panic(NewError(line, GENERICERROR, line, "Function should return a *LinqObj"))
 						}
 						innernext = item.(*LinqObj).Query.Iterate()
 						index++
@@ -3052,7 +3052,7 @@ func (lq *LinqObj) FromQuery(line string, scope *Scope, args ...Object) Object {
 	switch obj.Type() {
 	case FILE_OBJ:
 		if len(args) != 2 && len(args) != 3 && len(args) != 4 {
-			return NewError(line, GENERICERROR, "File object should have 2|3|4 parameter(s):from(file, variable, [field-separator], [selector])")
+			return NewError(line, GENERICERROR, line, "File object should have 2|3|4 parameter(s):from(file, variable, [field-separator], [selector])")
 		}
 
 		varStr := varObj.(*String).String
