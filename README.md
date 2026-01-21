@@ -14,6 +14,18 @@ Although designed primarily for learning and experimentation, Monkey provides a 
 ## Official website
 ### [monkeylang.vercel.app](https://monkeylang.vercel.app/)
 
+## Change log!
+### v1.5 or higher!
+#### Also, completely scriptable, yay!
+- Forget $(perl -e "whatever"), try: `monkey -e "println(jello)"`
+- <img width="817" height="272" alt="image" src="https://github.com/user-attachments/assets/9a8ee1fd-365d-417e-ad92-e348f4d096cd" />
+- <img width="1736" height="463" alt="image" src="https://github.com/user-attachments/assets/c38d2132-9609-4c47-b43f-46b0f836fec6" />
+#### Pretty errors!
+- Super cool pretty errors like rust!
+- <img width="617" height="236" alt="image" src="https://github.com/user-attachments/assets/9a6e6c68-ec02-4894-aa1f-de30fe209c2b" />
+- <img width="813" height="189" alt="image" src="https://github.com/user-attachments/assets/2562f24b-f50a-48e0-970a-0e1e788d52ed" />
+
+
 ## Summary
 
 - Implemented as an interpreter in **Go**
