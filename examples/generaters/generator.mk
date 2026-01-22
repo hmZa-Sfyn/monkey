@@ -30,7 +30,7 @@ tasks = ["foo", "bar", "baz", "hhf", "hht", "hy", "hjq1234567890"]
 results = process(tasks)
 
 for result in results {
-  println(result)
+  //println(result)
 }
 
 // XRange is an iterator over all the numbers from 0 to the limit.
@@ -47,6 +47,6 @@ fn XRange(limit) {
 	return ch
 }
 
-for i in XRange(10) {
+for i in XRange(99) {
     fmt.println(i)
 }

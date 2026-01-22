@@ -7,7 +7,8 @@
 ## Overview
 
 Monkey is a toy programming language and interpreter written in **Go**, originaly based on heifenghuang's magpie(credits at the end of this file).  
-It features a clean, C-style syntax and is heavily inspired by **Ruby**, **Python**, **Perl**, **C#**, and **JavaScript**.
+- It features a clean, C-style syntax and is heavily inspired by **Ruby**, **Python**, **Perl**, **C#**, and **JavaScript**.
+- Revolves around `oop` features, and monkey is `not a functional language`.
 
 Although designed primarily for learning and experimentation, Monkey provides a rich and modern feature set, along with built-in tooling that makes it feel like a production-ready language.
 
