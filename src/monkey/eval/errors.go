@@ -138,6 +138,14 @@ func NewError(line string, t int, args ...interface{}) Object {
 	return &Error{Kind: t, Message: msg, PosMarker: line}
 }
 
+func ErrPanic(line string, message string) {
+	msg := message
+
+	errorX := &Error{Kind: 0, Message: msg, PosMarker: line}
+
+	errorX.Inspect()
+}
+
 type Error struct {
 	Kind      int
 	Message   string

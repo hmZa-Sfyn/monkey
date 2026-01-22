@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"monkey/token"
+	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -18,6 +21,125 @@ var macroMap = map[string]token.TokenType{
 	"#ifdef":  token.IFDEF_MACRO,
 	"#else":   token.ELSE_MACRO,
 }
+
+/// error her
+
+func ErrPanic(line int, message string) {
+	msg := message
+
+	errorX := &Error{Kind: 0, Message: msg, PosMarker: string(line)}
+
+	errorX.Inspect()
+}
+func (e *Error) extractIdentifier() string {
+	// Match 'identifier' inside single quotes
+	re := regexp.MustCompile(`'([^']*)'`)
+	matches := re.FindStringSubmatch(e.Message)
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return ""
+}
+
+func (e *Error) Inspect() string {
+	var sb strings.Builder
+
+	// Parse PosMarker: supports both </file:line> and </file:line:column>
+	rePos := regexp.MustCompile(`<(/[^:>]+):(\d+)(?::(\d+))?>`)
+	matches := rePos.FindStringSubmatch(e.PosMarker)
+	if matches == nil {
+		sb.WriteString("\033[1;31m\033[0m ")
+		sb.WriteString(e.Message)
+		sb.WriteString("\n")
+		return sb.String()
+	}
+
+	filePath := matches[1]
+	lineNum, _ := strconv.Atoi(matches[2])
+	colNum := 1 // 1-based, default
+	if matches[3] != "" {
+		if c, err := strconv.Atoi(matches[3]); err == nil && c > 0 {
+			colNum = c
+		}
+	}
+	if lineNum <= 0 {
+		lineNum = 1
+	}
+
+	// Read the source line
+	var sourceLine string
+	if content, err := ioutil.ReadFile(filePath); err == nil {
+		lines := strings.Split(string(content), "\n")
+		if lineNum <= len(lines) {
+			sourceLine = strings.TrimRight(lines[lineNum-1], "\r\n")
+		}
+	}
+
+	// Try to extract quoted identifier (e.g., 'hfjdk')
+	identifier := e.extractIdentifier()
+
+	var underline string
+
+	safeRepeat := func(n int) string {
+		if n < 0 {
+			return ""
+		}
+		return strings.Repeat(" ", n)
+	}
+
+	if identifier != "" && sourceLine != "" {
+		if idx := strings.Index(sourceLine, identifier); idx != -1 {
+			prefix := safeRepeat(idx)
+			mark := strings.Repeat("^", len(identifier))
+			underline = prefix + "\033[1;31m" + mark + "\033[0m"
+		} else {
+			// Fallback to column number
+			colIdx := colNum - 1 // to 0-based
+			if colIdx < 0 {
+				colIdx = 0
+			}
+			if colIdx > len(sourceLine) {
+				colIdx = len(sourceLine)
+			}
+			prefix := safeRepeat(colIdx)
+			underline = prefix + "\033[1;31m^\033[0m"
+		}
+	} else {
+		// No identifier or no source line: use column-based
+		colIdx := colNum - 1 // to 0-based
+		if colIdx < 0 {
+			colIdx = 0
+		}
+		if colIdx > len(sourceLine) {
+			colIdx = len(sourceLine)
+		}
+		prefix := safeRepeat(colIdx - 2)
+		underline = prefix + "\033[1;31m^\033[0m"
+	}
+	// Format output
+	sb.WriteString(fmt.Sprintf("\033[1;90m---+--> (\033[0m\033[1m%s:%d\033[0m\033[1;90m)\033[0m\n", filePath, lineNum))
+	sb.WriteString("\033[1;90m   |\033[0m\n")
+
+	lineNumStr := strconv.Itoa(lineNum)
+	sb.WriteString(fmt.Sprintf("\033[1;37m%2s \033[0m\033[1;90m|\033[0m \033[90m%s\033[0m\n", lineNumStr, sourceLine))
+
+	if underline != "" {
+		sb.WriteString(fmt.Sprintf("\033[1;90m   |\033[0m %s\n", underline))
+	}
+
+	sb.WriteString("\033[1;90m   |\033[0m\n")
+	sb.WriteString(fmt.Sprintf("\033[1;31merror:\033[0m %s\n", e.Message))
+
+	return sb.String()
+}
+
+type Error struct {
+	Kind      int
+	Message   string
+	PosMarker string // e.g., "</path/to/file.mk:5>"
+}
+
+///
 
 // A mode value is a set of flags (or 0).
 // They control scanner behavior.
@@ -677,11 +799,11 @@ func (l *Lexer) readIdentifier() token.Token {
 	cnt := strings.Count(ret, "?")
 	if cnt > 1 { //multiple '?'
 		errStr := fmt.Sprintf("Line[%d]: Identifier() could only contain one '?' character", l.line, ret)
-		panic(errStr)
+		ErrPanic(l.line, errStr)
 	} else if cnt == 1 { //only one '?'
 		if ret[len(ret)-1:] != "?" {
 			errStr := fmt.Sprintf("Line[%d]: '?' character must be the last character in '%s' identifier", l.line, ret)
-			panic(errStr)
+			ErrPanic(l.line, errStr)
 		}
 	}
 
