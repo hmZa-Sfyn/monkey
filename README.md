@@ -12,20 +12,29 @@ Monkey is a toy programming language and interpreter written in **Go**, original
 
 Although designed primarily for learning and experimentation, Monkey provides a rich and modern feature set, along with built-in tooling that makes it feel like a production-ready language.
 
+- You can also use monkey as perl to exploit programs for memory buffer overflows! just a thought! 
+```sh
+echo $(monkey -e "println(\"AaA\"*12)")
+AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+```
+![Perl alternative](./docs/media/use_like_perl.png)
+
+- It even has pretty errors, ![Pretty errors](./docs/media/pretty_errors.png) ![Easy errors](./docs/media/easy_to_read_errors.png)
+
+- # Plus+ `No more goroutine shit!`
+
 ## Official website
 ### [monkeylang.vercel.app](https://monkeylang.vercel.app/)
 
 ## Summary
 
-- Implemented as an interpreter in **Go**
-- C-style syntax with influences from multiple modern languages
-- Supports imperative, functional, and object-oriented programming paradigms
-- Can import and interoperate with Go modules
-- Includes a built-in HTML documentation generator (**mdoc**)
-- Provides a simple but effective debugger
-- Comes with an interactive REPL featuring real-time syntax highlighting
-- Has been used to implement another programming language written entirely in Monkey
-- Most Monkey scripts can run in a web browser due to JavaScript-like semantics
+- Implemented as an interpreter in **Go**, inspired by: `writing an interpreter in go` book!
+- C-style syntax with influences from multiple modern languages, including C#, perl, more.
+- Supports imperative, functional(not much, cannot parse functions as arguments.), and object-oriented programming paradigms.
+- Can import and interoperate with Go modules.
+- Comes with an interactive REPL featuring real-time syntax highlighting.
+- Has been used to implement another programming language written entirely in Monkey.
+- Most Monkey scripts can run in a web browser due to JavaScript-like semantics.
 
 ## Documentation
 
