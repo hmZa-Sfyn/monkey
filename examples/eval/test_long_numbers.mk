@@ -1,4 +1,4 @@
-import std.monkey.bridge.verylong
+import monkey.bridge.verylong
 
 //println(`cat ~/.mk/lib/std/monkey/bridge/verylong.mk`)
 
